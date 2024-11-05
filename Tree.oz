@@ -1,7 +1,7 @@
 functor
 import
     System(showInfo:Show)
-    String(join:Join)
+    StringEder(join:Join)
 
 define
 
@@ -77,6 +77,32 @@ define
         end
     end
 
+    fun {FullFillTree Expression}
+        local Root Tokens in
+            Tokens = {String.tokens Expression & }
+            Root = {New Node init("@")}
+            {PopulateTree Tokens Root}
+            Root
+        end
+    end
+
+    proc {PopulateTree Tokens NodeRoot}
+        local H T in
+            H|T = Tokens
+            {Show "h: "# H}
+            {NodeRoot setLeft({New Node init(H)})}
+            if (T == nil) == false then
+                if {IsList T} then RightNode in
+                    RightNode = {New Node init("@")}
+                    {NodeRoot setRight(RightNode)}
+                    {PopulateTree T RightNode}
+                else
+                    {NodeRoot setRight({New Node init(T)})}
+                end
+            end
+        end
+    end
+
     local 
         Node1
         Node2
@@ -84,10 +110,12 @@ define
         Node4
         Node5
         Node6
+        Tokens
+        Root
     in
         Node1 = {New Node init("a")}
-        Node2 = {New Node init("baquero")}
-        Node3 = {New Node init("casa")}
+        Node2 = {New Node init("b")}
+        Node3 = {New Node init("c")}
         Node4 = {New Node init("d")}
         Node5 = {New Node init("e")}
         Node6 = {New Node init("f")}
@@ -99,7 +127,14 @@ define
         {Node2 setLeft(Node4)}
         {Node2 setRight(Node5)}
         {Node5 setLeft(Node6)}
-        {GetTree Node1}
+        %{GetTree Node1}
+        
+        {GetTree {FullFillTree "square square 3"}}
     end
     
+
+    %             a
+    %           /   \
+    %          b     c
+    %
 end

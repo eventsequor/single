@@ -91,11 +91,11 @@ define
     %{Show {Infix2Prefix {Str2Lst "fun hola X Y Z = var A = X * Y var B = A + 2 in A * B + Z"}}}
 
     %{Show {Infix2Prefix {Str2Lst "fun square x = x * x"}}}
-    for P in {Infix2Prefix {Str2Lst "fun hola X Y Z = var A = X * Y var B = A + 2 in A * B + Z"}} do
+    for P in {Infix2Prefix {Str2Lst "fun square x = x * x"}} do
         {Show P}
     end
     {Show "---\n\n"}
-    for P in {Str2Lst "fun hola X Y Z = var A = X * Y var B = A + 2 in A * B + Z"} do
+    for P in {Str2Lst "fun square x = x * x"} do
         {Show P}
     end
    
