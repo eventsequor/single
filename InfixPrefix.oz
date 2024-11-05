@@ -2,6 +2,11 @@ functor
 import
     System(showInfo:Show print:Print)
     Application(exit:Exit)
+
+export
+    Infix2Prefix
+    Str2Lst
+
 define
     Env Str2Lst Parse ParseFun Infix2Prefix 
     %% Split a string by spaces
@@ -91,12 +96,14 @@ define
     %{Show {Infix2Prefix {Str2Lst "fun hola X Y Z = var A = X * Y var B = A + 2 in A * B + Z"}}}
 
     %{Show {Infix2Prefix {Str2Lst "fun square x = x * x"}}}
-    for P in {Infix2Prefix {Str2Lst "fun square x = x * x"}} do
-        {Show P}
-    end
-    {Show "---\n\n"}
-    for P in {Str2Lst "fun square x = x * x"} do
-        {Show P}
+    proc {Test1}
+        for P in {Infix2Prefix {Str2Lst "fun twice x = x + x"}} do
+            {Show P}
+        end
+        {Show "---\n\n"}
+        for P in {Str2Lst "fun square x = x * x"} do
+            {Show P}
+        end
     end
    
 end

@@ -1,8 +1,7 @@
 functor
 import
-    System(showInfo:Show print:Print)
-    Application(exit:Exit)
-    String(strip:Strip split:Split join:Join make:Make replace:Replace nextSplitSEP:NextSplitSEP)
+    System(showInfo:Show)
+    StringEder(strip:Strip split:Split replace:Replace print:Print)
 
 export
     Scope
@@ -17,17 +16,21 @@ define
             functions := nil
             callbacks := nil
             instructions := ListOfInstructions
+            
             %Identify variables and functions
             for Instruction in @instructions do Type in
+                
                 Type = {GetTypes Instruction}
                 if Type == var then
-                    if @variables == nil then variables := [{New Variable init({GetNameVariableOrFunction Instruction})}] else variables := {Append @variables [{New Variable init({GetNameVariableOrFunction Instruction})}]}end
+                    if @variables == nil then variables := [{New Variable init(Instruction)}] else variables := {Append @variables [{New Variable init(Instruction)}]}end
                 end
-                if Type == function then
-                    if @functions == nil then functions := [{New Function init(Instruction)}] else functions := {Append @functions [{New Function init(Instruction)}]} end
-                end
+                
                 if Type == callback then 
                     if @callbacks == nil then callbacks := [{GetNameCallBack Instruction}] else callbacks := {Append @callbacks [{GetNameCallBack Instruction}]} end
+                end
+
+                if Type == function then
+                    if @functions == nil then functions := [{New Function init(Instruction)}] else functions := {Append @functions [{New Function init(Instruction)}]} end
                 end
             end
         end
@@ -38,24 +41,35 @@ define
         meth getFunctions(Return)
             Return = @functions 
         end
+
+        meth getVariables(Return)
+            Return = @variables
+        end
     end
 
     class Variable
-        attr name value
-        meth init(Name)
-             name := Name
+        attr name expression
+        meth init(Instruction) 
+            if {Length {Split Instruction " "}} == 1 then
+                name := Instruction
+                expression := ""
+            else
+                name := {GetNameVariableOrFunction Instruction}
+                expression := Instruction
+                local H T Expression in
+                    H|T = {Split Instruction "="}
+                    {VirtualString.toString {FoldL T fun {$ X Y} X#"="#Y end ""} ?Expression}
+                    expression := {Strip {Strip Expression "="} " "}
+                end
+            end
         end
 
         meth getName(Return)
             Return = @name
         end
 
-        meth getValue(Return)
-            Return = @value
-        end
-
-        meth setValue(NewValue)
-            value := NewValue
+        meth getExpression(Return)
+            Return = @expression
         end
     end
 
@@ -64,7 +78,8 @@ define
         meth init(Line)
             name := {GetNameVariableOrFunction Line}
             args := nil
-            for Arg in {GetArgs Line} do
+            
+            for Arg in {GetArgs Line} do Instr in
                 if @args == nil then
                     args := [{New Variable init(Arg)}]
                 else
@@ -92,6 +107,7 @@ define
         end
         
     end
+
     fun {GetTypes Line}
         local Type in
             Type = {Nth {Split {Replace Line "  " " "} " "} 1}
@@ -124,13 +140,4 @@ define
             Out
         end
     end
-    Obj 
-    Obj = {New Function init("fun square x y = x * x")}
-    Args
-    {Obj getArgs(Args)}
-    for Arg in Args do Name in
-        {Arg getName(Name)}
-        {Show "Name arg: "#Name}
-    end
-    
 end

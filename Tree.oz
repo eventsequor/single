@@ -2,6 +2,7 @@ functor
 import
     System(showInfo:Show)
     StringEder(join:Join)
+    InfixPrefix(str2Lst:Str2Lst infix2Prefix:Infix2Prefix)    
 
 define
 
@@ -42,7 +43,7 @@ define
         end
     end
 
-    proc {GetTree Root}    
+    proc {PrintTree Root}    
         {BuildTree2 Root 1 "" ""}
     end
 
@@ -89,13 +90,17 @@ define
     proc {PopulateTree Tokens NodeRoot}
         local H T in
             H|T = Tokens
-            {Show "h: "# H}
             {NodeRoot setLeft({New Node init(H)})}
             if (T == nil) == false then
                 if {IsList T} then RightNode in
-                    RightNode = {New Node init("@")}
-                    {NodeRoot setRight(RightNode)}
-                    {PopulateTree T RightNode}
+                    if {Length T} == 1 then
+                        {NodeRoot setRight({New Node init({Nth T 1})})}
+                    else
+                        RightNode = {New Node init("@")}
+                        {NodeRoot setRight(RightNode)}
+                        {PopulateTree T RightNode}
+                    end
+                    
                 else
                     {NodeRoot setRight({New Node init(T)})}
                 end
@@ -113,23 +118,22 @@ define
         Tokens
         Root
     in
-        Node1 = {New Node init("a")}
-        Node2 = {New Node init("b")}
-        Node3 = {New Node init("c")}
-        Node4 = {New Node init("d")}
-        Node5 = {New Node init("e")}
-        Node6 = {New Node init("f")}
-        % Add children node 1
-        {Node1 setLeft(Node2)}
-        {Node1 setRight(Node3)}
+        %Node1 = {New Node init("a")}
+        %Node2 = {New Node init("b")}
+        %Node3 = {New Node init("c")}
+        %Node4 = {New Node init("d")}
+        %Node5 = {New Node init("e")}
+        %Node6 = {New Node init("f")}
+        %% Add children node 1
+        %{Node1 setLeft(Node2)}
+        %{Node1 setRight(Node3)}
 
         % Add children node 2
-        {Node2 setLeft(Node4)}
-        {Node2 setRight(Node5)}
-        {Node5 setLeft(Node6)}
-        %{GetTree Node1}
-        
-        {GetTree {FullFillTree "square square 3"}}
+        %{Node2 setLeft(Node4)}
+        %{Node2 setRight(Node5)}
+        %{Node5 setLeft(Node6)}
+        %{PrintTree Node1}
+        {PrintTree {FullFillTree {Join {Infix2Prefix {Str2Lst "x * x"}} " "}}}
     end
     
 
