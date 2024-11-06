@@ -1,6 +1,6 @@
 functor
 import
-    System(showInfo:Show)
+    System(showInfo:Show print:Print)
     StringEder(join:Join)
     InfixPrefix(str2Lst:Str2Lst infix2Prefix:Infix2Prefix)    
 
@@ -43,12 +43,14 @@ define
         end
     end
 
-    proc {PrintTree Root}    
-        {BuildTree2 Root 1 "" ""}
+    proc {PrintTree Root Reduc}    
+        {BuildTree2 Root 1 "" "" Reduc}
     end
 
-    proc {BuildTree2 Root Level Prefix Symbol}
-        local Value RightNode LeftNode ValueLenght in
+    proc {BuildTree2 Root Level Prefix Symbol Reduc}
+        local Value RightNode LeftNode ValueLenght Operators Numbers in
+            Operators=["+" "-" "*" "/"]
+
             {Root getValue(Value)}
             ValueLenght = {Length Value}
             {Root getLeft(LeftNode)}
@@ -57,21 +59,25 @@ define
             if Level == 1 then
                 {Show Symbol # Value}
             else
-                {Show Prefix # Symbol # Value}
+                if (Reduc == " ")==false andthen {List.member Value Operators} == false andthen {Int.is Value} == false andthen (Value == "@")==false  then
+                    {BuildTree2 Reduc 2 Prefix "├─" " "}  
+                else
+                    {Show Prefix # Symbol # Value}
+                end
             end
 
             if (LeftNode == nil) == false then
                 if Level == 1 then
-                    {BuildTree2 LeftNode (Level + 1) Prefix "├─"}  
+                    {BuildTree2 LeftNode (Level + 1) Prefix "├─" Reduc}  
                 else
-                    {BuildTree2 LeftNode (Level + 1) (Prefix # "|" # {MultiString " " " " (ValueLenght)}) "├─"}  
+                    {BuildTree2 LeftNode (Level + 1) (Prefix # "|" # {MultiString " " " " (ValueLenght)}) "├─" Reduc}  
                 end                
             end
             if (RightNode == nil) == false then
                 if Level == 1 then
-                    {BuildTree2 RightNode (Level + 1) Prefix "└─"}
+                    {BuildTree2 RightNode (Level + 1) Prefix "└─" Reduc}
                 else
-                    {BuildTree2 RightNode (Level + 1) (Prefix # "|" # {MultiString " " " " (ValueLenght)}) "└─"}  
+                    {BuildTree2 RightNode (Level + 1) (Prefix # "|" # {MultiString " " " " (ValueLenght)}) "└─" Reduc}  
                 end
                 
             end
@@ -86,6 +92,7 @@ define
             Root
         end
     end
+
 
     proc {PopulateTree Tokens NodeRoot}
         local H T in
@@ -108,6 +115,8 @@ define
         end
     end
 
+    
+
     local 
         Node1
         Node2
@@ -117,6 +126,8 @@ define
         Node6
         Tokens
         Root
+        Square 
+        Base 
     in
         %Node1 = {New Node init("a")}
         %Node2 = {New Node init("b")}
@@ -133,12 +144,34 @@ define
         %{Node2 setRight(Node5)}
         %{Node5 setLeft(Node6)}
         %{PrintTree Node1}
-        {PrintTree {FullFillTree {Join {Infix2Prefix {Str2Lst "x * x"}} " "}}}
-    end
-    
+        Square = {FullFillTree {Join {Infix2Prefix {Str2Lst "x * x"}} " "}}
+        {Show "\n\n========\n\n"}
+        Base = {FullFillTree {Join {Infix2Prefix {Str2Lst "square square 3"}} " "} }
+            
+            %Ver Bases sin funcion para reduccion
+            {PrintTree Base " "} 
+            {Show "\n\n========\n\n"}
+            {PrintTree Square " "} 
 
-    %             a
-    %           /   \
-    %          b     c
-    %
+            {Show "\n\n========\n\n"}
+            %Base con reduccion
+            {PrintTree Base Square } 
+
+
+        % Twice ={FullFillTree {Join {Infix2Prefix {Str2Lst "id p * p"}} " "}}
+        % T = {FullFillTree {Join {Infix2Prefix {Str2Lst "f sqrt 4"}} " "}}
+        %     {Show "\n\n========\n\n"}
+        %     {PrintTree T Twice} 
+        Comp = {FullFillTree {Join {Infix2Prefix {Str2Lst "x * x in y + y"}} " "} }
+        Fourtimes = {FullFillTree {Join {Infix2Prefix {Str2Lst "fourtimes 2"}} " "} }
+
+            {Show "\n\n========\n\n"}
+            {PrintTree Fourtimes " " } 
+
+            {PrintTree Fourtimes Comp } 
+
+
+            
+
+    end
 end
