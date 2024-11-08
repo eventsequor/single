@@ -1,3 +1,2 @@
-var z = 1 / 2
 fun square x = x * x
 square square 3

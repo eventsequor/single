@@ -4,9 +4,9 @@ export
    ToInt ToAtom ToFloat
    Capitalize
    Split SplitAtMost Join
-   ToLower ToUpper
+   ToLower ToUpper SplitStart
    Lstrip Rstrip Strip
-   Replace ReplaceAtMost
+   Replace ReplaceAtMost Contains
 prepare
    CharToUpper = Char.toUpper
    CharToLower = Char.toLower
@@ -139,5 +139,9 @@ prepare
 
    fun {ReplaceAtMost S Old New Max}
       {Join {SplitAtMost S Old Max} New}
+   end
+
+   fun {Contains String Value}
+      {Length {Split String Value}} > 1 
    end
 end
