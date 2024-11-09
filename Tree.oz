@@ -1,7 +1,7 @@
 functor
 import
     System(showInfo:Show)
-    StringEder(join:Join replace:Replace contains:Contains split:Split)
+    StringEder(join:Join replace:Replace contains:Contains split:Split strip:Strip)
 
 export
     FullFillTree
@@ -116,7 +116,9 @@ define
     end
 
     proc {PopulateTree Tokens NodeRoot}
-        local H T in
+        if {Length Tokens} == 1 then
+            if {Contains {Nth Tokens 1} "~"} == false then {NodeRoot setRight({New Node init({Nth Tokens 1})})} end
+        else H T H2 in
             H|T = Tokens
             {NodeRoot setLeft({New Node init(H)})}
             if (T == nil) == false then
@@ -127,8 +129,7 @@ define
                         RightNode = {New Node init("@")}
                         {NodeRoot setRight(RightNode)}
                         {PopulateTree T RightNode}
-                    end
-                    
+                    end                    
                 else
                     {NodeRoot setRight({New Node init(T)})}
                 end
@@ -148,7 +149,8 @@ define
             FunctionBinder
             RootTree
         in
-            Expression2 = "(x + 1) * (x - 1) + 4"
+            Expression2 = "(x - (1 + 2)) * (x - 1) + 4"
+            %Expression2 = "squence x y"
             FunctionBinder = fun {$ Expression} 
                 if {Contains Expression "("} andthen {Contains Expression ")"} then Name SubFunction in
                     SubFunction = {GetOneExprIntoBrackets Expression}
@@ -160,27 +162,78 @@ define
                     Expression
                 end
             end
-            {Show "========="}
-            RootTree = {New Node init("@")} 
-            {PrintTree {FullTreeFromExpr RootTree {FunctionBinder Expression2}}}
+            RootTree = {New Node init("@")}
+            _ = {FullTreeFromExpr RootTree {FunctionBinder Expression2}}
         end
     end
 
     fun {FullTreeFromExpr RootTree Expression}
-        
         {Show "Fist ==========="}
-        {PrintTree {EvaluateOperation "*" RootTree Expression}}
+        {PrintTree {ResolveMainTree RootTree Expression}}
         {Show "\nSecond ==========="}
-        _ = {EvaluateOperation "+" RootTree "@"}
-        
+        {ResolveSubNodes RootTree}
+        {PrintTree RootTree}
+        %{Debinding RootTree}
+        %{PrintTree RootTree}
         RootTree
+    end
+
+    proc {Debinding RootTree}
+        local Value LeftNode RightNode NewOutPut in
+            {RootTree getValue(Value)}
+            if {Contains Value "~"} then NewValue in
+                NewValue = {Replace {Replace {Replace Value "~" " "} "<" "("} ">" ")"}
+                {RootTree setValue({RemoveBrackers NewValue})}
+            end
+
+            {RootTree getLeft(LeftNode)}
+            {RootTree getRight(RightNode)}
+            if (LeftNode == nil) == false then {Debinding LeftNode} end
+            if (RightNode == nil) == false then {Debinding RightNode} end
+        end
+    end
+
+    fun {RemoveBrackers Expression}
+        if [{Nth Expression 1}] == "(" andthen [{Nth {Reverse Expression} 1}] == ")" andthen {Length Expression} > 2 then H T ST in
+            H|T = Expression
+            _|ST = {Reverse T}
+            {Reverse ST}
+        else
+            Expression
+        end
+    end
+
+    proc {ResolveSubNodes RootTree}
+        local Value LeftNode RightNode NewOutPut in
+            {RootTree getValue(Value)}
+            {RootTree getLeft(LeftNode)}
+            {RootTree getRight(RightNode)}
+            if (LeftNode == nil) == false then {ResolveSubNodes LeftNode} end
+            if (RightNode == nil) == false then {ResolveSubNodes RightNode} end
+            if (Value == "@") == false then _ = {ResolveMainTree RootTree Value} end  
+        end
+    end
+
+    fun {ResolveMainTree RootTree Expression}
+        if {Contains Expression "*"} then {EvaluateOperation "*" RootTree Expression}
+        elseif {Contains Expression "/"} then {EvaluateOperation "/" RootTree Expression} 
+        elseif {Contains Expression "+"} then {EvaluateOperation "+" RootTree Expression} 
+        elseif {Contains Expression "-"} then {EvaluateOperation "-" RootTree Expression}
+        elseif (Expression == "@") == false then {EvaluateOperation "±" RootTree Expression} % ± this symbol will never exist
+        else RootTree end
     end
 
     fun {EvaluateOperation Oper RootTree Expression}
         if {Contains Expression Oper} andthen (Expression == Oper) == false then H T Tokens LeftNode LeftValue RightNode RightValue in
-            H|T = {Split Expression Oper}
-            Tokens = [Oper H {Join T Oper}]  
-            {PopulateTree Tokens RootTree}
+            H|T = {Split Expression {Join [" " Oper " "] ""}}
+            if T == nil then 
+                Tokens = [H]
+                {PopulateTree Tokens RootTree}
+            else
+                Tokens = [Oper H {Join T Oper}]
+                {PopulateTree Tokens RootTree}
+            end                       
+
             {RootTree getLeft(LeftNode)}
             {RootTree getRight(RightNode)}
             if (LeftNode == nil) == false andthen {Contains Expression Oper} andthen (Expression == Oper) == false then
@@ -198,7 +251,10 @@ define
                 end                
             end
         end
-        
+
+        if Oper == "±" then Tokens = [Expression] in
+            {PopulateTree Tokens RootTree}
+        end
 
         if Expression == "@" then RightNode LeftNode LeftValue RightValue in
             {RootTree getLeft(LeftNode)}
