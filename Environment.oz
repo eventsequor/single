@@ -2,7 +2,7 @@ functor
 import
     System(showInfo:Show)
     StringEder(strip:Strip split:Split replace:Replace join:Join)
-    Tree(fullFillTree:FullFillTree printTree:PrintTree)
+    Tree(fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree)
     InfixPrefix(str2Lst:Str2Lst infix2Prefix:Infix2Prefix)  
 
 export
@@ -40,8 +40,16 @@ define
         meth line_evaluator(Line)
             {Show ""}
         end
+
         meth getFunctions(Return)
             Return = @functions 
+        end
+
+        meth getFunctionNames(Return)
+            local Functions in
+                {self getFunctions(Functions)}
+                Return = {Map Functions fun {$ F} local Name in {F getFuncName(Name)} Name end end}
+            end
         end
 
         meth getVariables(Return)
@@ -54,18 +62,14 @@ define
 
         meth executeCallBacks
             {Show "===== Starting callbacks resolution ========"}
-            for Call in @callbacks do Expression RootTree XValue in
+            for Call in @callbacks do Expression RootTree XValue FuncNamesList in
                 {Show "\nNew CallBack"}
                 {Call getExpression(Expression)}
                 {Show "Expression: " # Expression}
-                {Call getTree(RootTree)}
-                {self reduceTree(RootTree)}
-            end
-        end
 
-        meth getXValue(RootTree XValue)
-            local RootTree in
-                
+                {self getFunctionNames(FuncNamesList)}
+                {Call getTree(FuncNamesList RootTree)}
+                {self reduceTree(RootTree)}
             end
         end
 
@@ -159,8 +163,8 @@ define
             Return = @expression
         end
 
-        meth getTree(Return)
-            Return = {FullFillTree @expression}
+        meth getTree(FuncNamesList Return)
+            Return = {FullTreeFromCallBack FuncNamesList @expression}
         end
     end
 
@@ -224,7 +228,7 @@ define
         end
 
         meth getTree(Return)
-            Return = {FullFillTree {Join {Infix2Prefix {Str2Lst @expression}} " "}}
+            Return = {FullTreeFromFunction @expression}
         end        
     end
 

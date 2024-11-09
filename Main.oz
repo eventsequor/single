@@ -7,9 +7,6 @@ import
    Tree(printTree:PrintTree)
    
 define 
-   
-   
-
    fun {ReadProgram Path}
       % Read the entry file
       {Show "Reading program on path: <" # Path # ">"}
