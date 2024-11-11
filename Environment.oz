@@ -2,8 +2,9 @@ functor
 import
     System(showInfo:Show)
     StringEder(strip:Strip split:Split replace:Replace join:Join)
-    Tree(fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree)
-    InfixPrefix(str2Lst:Str2Lst infix2Prefix:Infix2Prefix)  
+    Tree(fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
+    InfixPrefix(str2Lst:Str2Lst infix2Prefix:Infix2Prefix)
+    Operator(resolve:Resolve)
 
 export
     Scope
@@ -69,12 +70,13 @@ define
 
                 {self getFunctionNames(FuncNamesList)}
                 {Call getTree(FuncNamesList RootTree)}
+                {PrintTree RootTree}
                 {self reduceTree(RootTree)}
             end
         end
 
         meth reduceTree(RootTree)
-            local NameOfFunctionsInTree = {NewCell nil} in
+            local NameOfFunctionsInTree = {NewCell nil} ListArgs = {NewCell nil} in
                 {Show "\n================ RootTree =================="}
                 {PrintTree RootTree}
                 {self getFunctionInSheets(RootTree NameOfFunctionsInTree)}
@@ -85,6 +87,76 @@ define
                 
                 {Show "\n============== Reduce Tree ================="}
                 {PrintTree RootTree}
+
+                {Show "\n============== Resolution =================="}
+                {self resolveTree(RootTree ListArgs)}
+                {PrintTree RootTree}
+            end
+        end
+
+        meth resolveTree(RootTree ListArgs)
+            {self reducer(RootTree)}
+            
+        end
+
+        meth reducer(RootTree)
+            local Answer = {NewCell false} in 
+                {self checkItNumericTree(RootTree Answer)}
+                if @Answer then 
+                    {self reduceNumericFunctions(RootTree)} 
+                    {self reducer(RootTree)} 
+                end
+            end
+        end
+
+        meth reduceNumericFunctions(RootTree)   
+            if (RootTree == nil) == false then RootValue LeftNode LeftValue RightNode RightValue in
+                {RootTree getValue(RootValue)}
+                {RootTree getLeft(LeftNode)}
+                {RootTree getRight(RightNode)}
+                if RootValue == "@" andthen (LeftNode == nil) == false andthen (RightNode == nil) ==false then LeftValue RightValue in
+                    {LeftNode getValue(LeftValue)}
+                    {RightNode getValue(RightValue)}
+                    if {ContainsAnyElement LeftValue ["*" "/" "+" "-"]} andthen RightValue == "@" then SubRightNode SubLeftNode in
+                        {RightNode getLeft(SubLeftNode)}
+                        {RightNode getRight(SubRightNode)}
+                        if (SubRightNode == nil) == false andthen (SubLeftNode == nil) == false then LeftValueSub RightValueSub in
+                            {SubLeftNode getValue(LeftValueSub)}
+                            {SubRightNode getValue(RightValueSub)}
+                            if {IsNumber LeftValueSub} andthen {IsNumber RightValueSub} then NewValue in
+                                NewValue = {Resolve {StringToNumber LeftValueSub} LeftValue {StringToNumber RightValueSub}}
+                                {RootTree setValue({FloatToString NewValue})}
+                                {RootTree setLeft(nil)}
+                                {RootTree setRight(nil)}
+                            end
+                        end
+                    end
+                end
+                {self reduceNumericFunctions(LeftNode)}
+                {self reduceNumericFunctions(RightNode)}
+            end
+        end
+
+        meth checkItNumericTree(RootTree Answer)
+            if RootTree == nil then
+                Answer := false
+            else
+                local RootValue LeftNode LeftValue RightNode RightValue in
+                    {RootTree getValue(RootValue)}
+                    {RootTree getLeft(LeftNode)}
+                    {RootTree getRight(RightNode)}
+                    if RootValue == "@" andthen (LeftNode == nil) == false andthen (RightNode == nil) == false then LeftValue RightValue in
+                        {LeftNode getValue(LeftValue)}
+                        {RightNode getValue(RightValue)}
+                        if {IsNumber LeftValue} andthen {IsNumber RightValue} then
+                            Answer := true
+                        end
+                    end
+                    if @Answer == false then
+                        {self checkItNumericTree(LeftNode Answer)}
+                        {self checkItNumericTree(RightNode Answer)}
+                    end
+                end
             end
         end
 
@@ -97,9 +169,12 @@ define
                     if LeftValue == FunctionName then Functions LocalFuncs FuncTree in
                         {self getFunctions(Functions)}
                         LocalFuncs = {Filter Functions fun {$ F} local Nm in {F getFuncName(Nm)} Nm == FunctionName  end end}
-                        if {Length LocalFuncs} > 0 then Fun in
+                        if {Length LocalFuncs} > 0 then Fun Variables in
                             Fun = {Nth LocalFuncs 1}
                             {Fun getTree(FuncTree)}
+                            {Fun getArgs(Variables)} % Get arguments from functions this is a definition
+                            {FuncTree setVariablesInfo(Variables)} % The variables represent the arguments that contains a tree
+
                             {RootTree setLeft(FuncTree)}
                         end
                     else
@@ -169,7 +244,7 @@ define
     end
 
     class Variable
-        attr name expression
+        attr name expression value
         meth init(Instruction) 
             if {Length {Split Instruction " "}} == 1 then
                 name := Instruction
@@ -191,6 +266,14 @@ define
 
         meth getExpression(Return)
             Return = @expression
+        end
+
+        meth getValue(Return)
+            Return := @value
+        end
+
+        meth setValue(NewValue)
+            value := NewValue
         end
     end
 
@@ -263,5 +346,21 @@ define
             {VirtualString.toString Name ?Out}
             {Strip Out " "}
         end
+    end
+
+    fun {IsNumber Input}
+        local Value ValueToEvaluate in
+            ValueToEvaluate = {Strip Input " "}
+                Value = if {IsString ValueToEvaluate} then
+                            try {StringToInt ValueToEvaluate} catch X then try {StringToFloat ValueToEvaluate} catch Y then ValueToEvaluate end end 
+                        else 
+                            ValueToEvaluate 
+                        end
+                if {IsInt Value} then true elseif {IsFloat Value} then true else false end                       
+        end
+    end
+
+    fun {StringToNumber Input}
+        try {StringToInt Input} catch X then try {StringToFloat Input} catch Y then Input end end         
     end
 end

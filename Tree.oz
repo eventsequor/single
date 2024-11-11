@@ -7,15 +7,17 @@ export
     PrintTree
     FullTreeFromCallBack
     FullTreeFromFunction
+    ContainsAnyElement
 
 define
 
     class Node
-        attr value left right nickname
+        attr value left right variablesInfo
         meth init(Value)
             value := Value
             left := nil
             right := nil
+            variablesInfo := nil
         end
 
         meth getValue(ReturnValue)
@@ -42,12 +44,12 @@ define
             ReturnRight = @right
         end
 
-        meth setNickName(NewNickName)
-            nickname := NewNickName
+        meth getVariablesInfo(Return)
+            Return = @variablesInfo
         end
 
-        meth getNickName(Return)
-            Return := @nickname
+        meth setVariablesInfo(VariablesInfo)
+            variablesInfo := VariablesInfo
         end
     end
 
@@ -73,7 +75,7 @@ define
             ValueLenght = {Length Value}
             {Root getLeft(LeftNode)}
             {Root getRight(RightNode)}
-            %Print
+            
             if Level == 1 then
                 {Show Symbol # Value}
             else 
@@ -133,6 +135,7 @@ define
 
     proc {ReduceTree RootTree}
         if {IsAnyElementInTree RootTree [" * " " / " " + " " - " "(" ")" "~"]} then 
+            {Rebinding RootTree}
             {ResolveSubNodes RootTree}
             {Debinding RootTree}
             {Rebinding RootTree}
@@ -235,22 +238,23 @@ define
     end
 
     fun {ResolveMainTree RootTree Expression}
-        if {Contains Expression " * "} then {EvaluateOperation "*" RootTree Expression}
-        elseif {Contains Expression " / "} then {EvaluateOperation "/" RootTree Expression} 
-        elseif {Contains Expression " + "} then {EvaluateOperation "+" RootTree Expression} 
-        elseif {Contains Expression " - "} then {EvaluateOperation "-" RootTree Expression}
+        if {Contains Expression " * "} then if {CheckConsistence "*" Expression} == Expression then {EvaluateOperation "*" RootTree Expression} else {ResolveMainTree RootTree {CheckConsistence "*" Expression}} end
+        elseif {Contains Expression " / "} then if {CheckConsistence "/" Expression} == Expression then {EvaluateOperation "/" RootTree Expression} else {ResolveMainTree RootTree {CheckConsistence "/" Expression}} end 
+        elseif {Contains Expression " + "} then if {CheckConsistence "+" Expression} == Expression then {EvaluateOperation "+" RootTree Expression} else {ResolveMainTree RootTree {CheckConsistence "+" Expression}} end 
+        elseif {Contains Expression " - "} then if {CheckConsistence "-" Expression} == Expression then {EvaluateOperation "-" RootTree Expression} else {ResolveMainTree RootTree {CheckConsistence "-" Expression}} end 
         elseif (Expression == "@") == false then {EvaluateOperation "±" RootTree Expression} % ± this symbol will never exist
         else RootTree end
     end
 
     fun {EvaluateOperation Oper RootTree Expression}
-        if {Contains Expression Oper} andthen (Expression == Oper) == false then H T Tokens LeftNode LeftValue RightNode RightValue in
-            H|T = {Split Expression {Join [" " Oper " "] ""}}
+        if {Contains Expression Oper} andthen (Expression == Oper) == false then H T Tokens LeftNode LeftValue RightNode RightValue SplitExpr in
+            SplitExpr = {Join [" " Oper " "] ""}
+            H|T = {Split Expression SplitExpr}
             if T == nil then
                 Tokens = [H]
                 {PopulateTree Tokens RootTree}
-            else             
-                Tokens = [{Strip Oper " "} H {Join T Oper}]
+            else
+                Tokens = [{Strip Oper " "} H {FunctionBinder {Join T SplitExpr}}]
                 {PopulateTree Tokens RootTree}
             end                       
 
@@ -393,15 +397,28 @@ define
             Expression2 FuncNamesList
         in
             %Expression2 = "squence 4 1"
-            Expression2 = "x * x"
+            %Expression2 = "3 + 4 * (1 + 3)"
+            Expression2 = "3 + 4 * (1 + 3)"
             FuncNamesList = ["square" "sqr"]
             %Expression2 = "squence sequence y"
             %Expression2 = "x * x"
             
             {PrintTree {FullTreeFromFunction Expression2}} % Full fill from function
             %{PrintTree {FullTreeFromCallBack FuncNamesList Expression2}}
+            %{Show {CheckConsistence "*" Expression2}}
         end
     end
 
-    %{Virtual}
+    fun {CheckConsistence Oper Expression}
+        local Splinter = {Join [" " Oper " "] ""} Replacer = {Join ["~" Oper "~"] ""} NewExpr in
+            NewExpr = {Replace {Strip Expression " "} Splinter Replacer}
+            if {Contains NewExpr " "} then
+                NewExpr
+            else
+                {Strip Expression " "}
+            end
+        end
+    end
+
+    {Virtual}
 end

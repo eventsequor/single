@@ -2,7 +2,10 @@ functor
 import
     System(showInfo:Show)
     Application(exit:Exit)
-    String(strip:Strip)
+    StringEder(strip:Strip)
+export 
+    Resolve
+    
 define
     Add = fun {$ A B} A + B end
     Subtract = fun {$ A B} A - B end
@@ -49,10 +52,13 @@ define
     fun {Resolve A Symbol B}
         case Symbol of nil then "no operation: "#Symbol
         else 
-            {{GetOper {Strip Symbol " "}} A B}
+            {{GetOper {Strip Symbol " "}} {StringToFloat A} {StringToFloat B}}
         end
     end    
     
-    {Show {Resolve 1 "+" 9}}
-    {Exit 0}
+    proc {Test}
+        {Show {Resolve 6 "/" 3}}
+        {Exit 0}
+    end
+    %{Test}
 end
