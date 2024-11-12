@@ -1,9 +1,8 @@
 functor
 import
     System(showInfo:Show)
-    StringEder(strip:Strip split:Split replace:Replace join:Join)
-    Tree(fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
-    InfixPrefix(str2Lst:Str2Lst infix2Prefix:Infix2Prefix)
+    StringEder(strip:Strip split:Split replace:Replace)
+    Tree(isAnyElementInTree:IsAnyElementInTree isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
     Operator(resolve:Resolve)
 
 export
@@ -53,6 +52,18 @@ define
             end
         end
 
+        meth getFunctionParameter(FunctionName Return)
+            local Functions Result in
+                {self getFunctions(Functions)}
+                Result = {Filter Functions fun {$ F} local FunNam in {F getFuncName(FunNam)} FunNam == FunctionName end end}
+                if {Length Result} > 0 then
+                    {{Nth Result 1} getArgs(Return)}
+                else
+                    Return = nil
+                end
+            end
+        end
+
         meth getVariables(Return)
             Return = @variables
         end
@@ -63,40 +74,137 @@ define
 
         meth executeCallBacks
             {Show "===== Starting callbacks resolution ========"}
-            for Call in @callbacks do Expression RootTree XValue FuncNamesList in
+            for Call in @callbacks do Expression RootTree FuncNamesList in
                 {Show "\nNew CallBack"}
                 {Call getExpression(Expression)}
                 {Show "Expression: " # Expression}
 
                 {self getFunctionNames(FuncNamesList)}
                 {Call getTree(FuncNamesList RootTree)}
-                {PrintTree RootTree}
                 {self reduceTree(RootTree)}
             end
         end
 
         meth reduceTree(RootTree)
-            local NameOfFunctionsInTree = {NewCell nil} ListArgs = {NewCell nil} in
+            local NameOfFunctionsInTree = {NewCell nil} in
                 {Show "\n================ RootTree =================="}
                 {PrintTree RootTree}
                 {self getFunctionInSheets(RootTree NameOfFunctionsInTree)}
                 
+                {Show "\n===== Replace names func by its tree ========"}
                 for Value in @NameOfFunctionsInTree do
                     {self replaceNameFuncByTree(RootTree Value)}
                 end
-                
-                {Show "\n============== Reduce Tree ================="}
                 {PrintTree RootTree}
 
-                {Show "\n============== Resolution =================="}
-                {self resolveTree(RootTree ListArgs)}
+                {Show "\n============== Reduce tree =================="}
+                {self reducer(RootTree)}
+                {PrintTree RootTree}
+
+                {self resolveFunction(RootTree)}
+
+                {Show "\n============== Final Result ================="}
                 {PrintTree RootTree}
             end
         end
 
-        meth resolveTree(RootTree ListArgs)
-            {self reducer(RootTree)}
-            
+        meth resolveFunction(RootTree)
+            if {IsAnyElementInTree RootTree ["*" "/" "+" "-"]} then
+                {Show "\n=========== Replace Argument ==============="}
+                {self functionArgReplacement(RootTree)}
+                {PrintTree RootTree}
+
+                {Show "\n=========== And Reduce tree ================"}
+                {self reducer(RootTree)}
+                {PrintTree RootTree}
+                
+                {self resolveFunction(RootTree)}
+            end
+        end
+
+        meth getContantAndRemoveSheet(RootTree ValuesList)
+            if (RootTree == nil) == false then
+                local Value RightNode in
+                    {RootTree getValue(Value)}
+                    if (Value == "@") == false then
+                        if @ValuesList == nil then
+                            ValuesList := [Value]
+                        else
+                            ValuesList := {Append @ValuesList [Value]}
+                        end
+                    end
+
+                    {RootTree getRight(RightNode)}
+                    {self getContantAndRemoveSheet(RightNode ValuesList)}
+                end
+            end
+        end
+
+        meth replaceVariableValue(RootTree VariableList)
+            if (RootTree == nil) == false then
+                local Value Result RightNode LeftNode in
+                    {RootTree getValue(Value)}
+                    Result = {Filter VariableList fun {$ Var} local VarName in {Var getName(VarName)} Value == VarName end end}
+                    if (Result == nil) == false then Variable VariableValue in
+                        Variable = {Nth Result 1}
+                        {Variable getValue(VariableValue)}
+                        if (VariableValue == nil) == false then {RootTree setValue(VariableValue)} end
+                    end
+                    {RootTree getRight(RightNode)}
+                    {RootTree getLeft(LeftNode)}
+
+                    {self replaceVariableValue(LeftNode VariableList)}
+                    {self replaceVariableValue(RightNode VariableList)}
+                end
+            end
+        end
+
+        meth matchVariable(VariableList ValuesList)
+            local Counter = {NewCell 1} in
+                for Variable in VariableList do
+                    {Variable setValue({Nth ValuesList @Counter})}
+                    Counter := @Counter + 1
+                end
+            end
+        end
+
+        meth functionArgReplacement(RootTree)
+            if (RootTree == nil) == false then
+                local Value FunctionName RightNode LeftNode FunctionNames in
+                    {RootTree getValue(Value)}
+
+                    {RootTree getLeft(LeftNode)}
+                    {RootTree getRight(RightNode)}
+
+                    if (LeftNode == nil) == false andthen (RightNode == nil) == false then RightValue in
+                        {LeftNode getFunctionName(FunctionName)}
+                        {self getFunctionNames(FunctionNames)}
+                        {RightNode getValue(RightValue)}
+
+                        if Value == "@" andthen {IsNumber RightValue} andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
+                            {self getFunctionParameter(FunctionName VariableList)}
+                            if (VariableList == nil) == false then ValuesList = {NewCell nil} in
+                                {self getContantAndRemoveSheet(RootTree ValuesList)}
+                                {self matchVariable(VariableList @ValuesList)}
+                                {self replaceVariableValue(LeftNode VariableList)}                                
+                                local LeftValue SubLeftNode SubRightNode in
+                                    {LeftNode getValue(LeftValue)}
+                                    {LeftNode getLeft(SubLeftNode)}
+                                    {LeftNode getRight(SubRightNode)}
+
+                                    {RootTree setValue(LeftValue)}
+                                    {RootTree setLeft(SubLeftNode)}
+                                    {RootTree setRight(SubRightNode)}
+                                end     
+                            end
+                        end
+                    end
+
+                    % Recursive call
+                    {self functionArgReplacement(LeftNode)}                    
+                    {self functionArgReplacement(RightNode)}                    
+                end
+            end
         end
 
         meth reducer(RootTree)
@@ -110,7 +218,7 @@ define
         end
 
         meth reduceNumericFunctions(RootTree)   
-            if (RootTree == nil) == false then RootValue LeftNode LeftValue RightNode RightValue in
+            if (RootTree == nil) == false then RootValue LeftNode RightNode in
                 {RootTree getValue(RootValue)}
                 {RootTree getLeft(LeftNode)}
                 {RootTree getRight(RightNode)}
@@ -123,11 +231,12 @@ define
                         if (SubRightNode == nil) == false andthen (SubLeftNode == nil) == false then LeftValueSub RightValueSub in
                             {SubLeftNode getValue(LeftValueSub)}
                             {SubRightNode getValue(RightValueSub)}
-                            if {IsNumber LeftValueSub} andthen {IsNumber RightValueSub} then NewValue in
+                            if {IsNumber LeftValueSub} andthen {IsNumber RightValueSub} then NewValue SubRightNode2 in
                                 NewValue = {Resolve {StringToNumber LeftValueSub} LeftValue {StringToNumber RightValueSub}}
                                 {RootTree setValue({FloatToString NewValue})}
+                                {SubRightNode getRight(SubRightNode2)}
                                 {RootTree setLeft(nil)}
-                                {RootTree setRight(nil)}
+                                {RootTree setRight(SubRightNode2)}
                             end
                         end
                     end
@@ -141,15 +250,22 @@ define
             if RootTree == nil then
                 Answer := false
             else
-                local RootValue LeftNode LeftValue RightNode RightValue in
+                local RootValue LeftNode RightNode in
                     {RootTree getValue(RootValue)}
                     {RootTree getLeft(LeftNode)}
                     {RootTree getRight(RightNode)}
-                    if RootValue == "@" andthen (LeftNode == nil) == false andthen (RightNode == nil) == false then LeftValue RightValue in
-                        {LeftNode getValue(LeftValue)}
+                    if RootValue == "@" andthen (LeftNode == nil) == false andthen (RightNode == nil) == false then RightValue in
                         {RightNode getValue(RightValue)}
-                        if {IsNumber LeftValue} andthen {IsNumber RightValue} then
-                            Answer := true
+                        if RightValue == "@" then SubLeftNode SubRightNode in
+                            {RightNode getLeft(SubLeftNode)}
+                            {RightNode getRight(SubRightNode)}
+                            if (SubLeftNode == nil) == false andthen (SubRightNode == nil) == false then SubRightValue SubLeftValue in
+                                {SubLeftNode getValue(SubLeftValue)}
+                                {SubRightNode getValue(SubRightValue)}
+                                if {IsNumber SubLeftValue} andthen {IsNumber SubRightValue} then
+                                    Answer := true
+                                end
+                            end
                         end
                     end
                     if @Answer == false then
@@ -164,17 +280,17 @@ define
             local LeftValue LeftNode RightValue RightNode in
                 % Left node
                 {RootTree getLeft(LeftNode)}
-                if (LeftNode == nil) == false then
+                if (LeftNode == nil) == false then FunctionName in
+                    {LeftNode getFunctionName(FunctionName)}
                     {LeftNode getValue(LeftValue)}
                     if LeftValue == FunctionName then Functions LocalFuncs FuncTree in
                         {self getFunctions(Functions)}
                         LocalFuncs = {Filter Functions fun {$ F} local Nm in {F getFuncName(Nm)} Nm == FunctionName  end end}
-                        if {Length LocalFuncs} > 0 then Fun Variables in
+                        if {Length LocalFuncs} > 0 then Fun in
                             Fun = {Nth LocalFuncs 1}
                             {Fun getTree(FuncTree)}
-                            {Fun getArgs(Variables)} % Get arguments from functions this is a definition
-                            {FuncTree setVariablesInfo(Variables)} % The variables represent the arguments that contains a tree
 
+                            {FuncTree setFunctionName(FunctionName)}
                             {RootTree setLeft(FuncTree)}
                         end
                     else
@@ -184,7 +300,8 @@ define
 
                 % Right node
                 {RootTree getRight(RightNode)}
-                if (RightNode == nil) == false then
+                if (RightNode == nil) == false then FunctionName in
+                    {RightNode getFunctionName(FunctionName)}
                     {RightNode getValue(RightValue)}
                     if RightValue == FunctionName then Functions LocalFuncs FuncTree in
                         {self getFunctions(Functions)}
@@ -192,9 +309,10 @@ define
                         if {Length LocalFuncs} > 0 then Fun in
                             Fun = {Nth LocalFuncs 1}
                             {Fun getTree(FuncTree)}
+
+                            {FuncTree setFunctionName(FunctionName)}
                             {RootTree setRight(FuncTree)}
                         end
-                    else
                         {self replaceNameFuncByTree(RightNode FunctionName)}
                     end
                 end
@@ -249,6 +367,7 @@ define
             if {Length {Split Instruction " "}} == 1 then
                 name := Instruction
                 expression := ""
+                value := nil
             else
                 name := {GetNameVariableOrFunction Instruction}
                 expression := Instruction
@@ -269,7 +388,7 @@ define
         end
 
         meth getValue(Return)
-            Return := @value
+            Return = @value
         end
 
         meth setValue(NewValue)
@@ -345,18 +464,6 @@ define
             Name = {Nth {Split {Replace Line "  " " "} " "} 2}
             {VirtualString.toString Name ?Out}
             {Strip Out " "}
-        end
-    end
-
-    fun {IsNumber Input}
-        local Value ValueToEvaluate in
-            ValueToEvaluate = {Strip Input " "}
-                Value = if {IsString ValueToEvaluate} then
-                            try {StringToInt ValueToEvaluate} catch X then try {StringToFloat ValueToEvaluate} catch Y then ValueToEvaluate end end 
-                        else 
-                            ValueToEvaluate 
-                        end
-                if {IsInt Value} then true elseif {IsFloat Value} then true else false end                       
         end
     end
 

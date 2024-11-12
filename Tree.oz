@@ -8,16 +8,18 @@ export
     FullTreeFromCallBack
     FullTreeFromFunction
     ContainsAnyElement
+    IsNumber
+    IsAnyElementInTree
 
 define
 
     class Node
-        attr value left right variablesInfo
+        attr value left right functionName
         meth init(Value)
             value := Value
             left := nil
             right := nil
-            variablesInfo := nil
+            functionName := Value
         end
 
         meth getValue(ReturnValue)
@@ -43,13 +45,12 @@ define
         meth getRight(ReturnRight)
             ReturnRight = @right
         end
-
-        meth getVariablesInfo(Return)
-            Return = @variablesInfo
+        meth setFunctionName(FunctionName)
+            functionName := FunctionName
         end
 
-        meth setVariablesInfo(VariablesInfo)
-            variablesInfo := VariablesInfo
+        meth getFunctionName(Return)
+            Return = @functionName
         end
     end
 
@@ -99,21 +100,39 @@ define
         end
     end
 
+    proc {AddSheetToRightWinger RootTree NewRightNode}
+        if (RootTree == nil) == false then RightNode in
+            {RootTree getRight(RightNode)}
+            if RightNode == nil then
+                {RootTree setRight(NewRightNode)}
+            else
+                {AddSheetToRightWinger RightNode NewRightNode}
+            end
+        end
+    end
+
     proc {PopulateTree Tokens NodeRoot}
         if {Length Tokens} == 1 then NodeValue in
             {NodeRoot getValue(NodeValue)}
             if {Contains {Nth Tokens 1} "~"} == false andthen NodeValue == "@" then {NodeRoot setRight({New Node init({Nth Tokens 1})})} end
-        else H T in
+        else H T OldLeftNode NewLeftNode in
             H|T = Tokens
             {NodeRoot setLeft({New Node init(H)})}
             if (T == nil) == false then
                 if {IsList T} then RightNode in
                     if {Length T} == 1 then
                         {NodeRoot setRight({New Node init({Nth T 1})})}
-                    else
-                        RightNode = {New Node init("@")}
+                    else OldNode OldRightNode in
+                        {NodeRoot getRight(OldNode)}
+
+                        {NodeRoot getRight(OldRightNode)}
+
+                        RightNode = if OldRightNode == nil then {New Node init("@")} else {OldRightNode setValue("@")} OldRightNode end
+
                         {NodeRoot setRight(RightNode)}
                         {PopulateTree T RightNode}
+                        
+                        {AddSheetToRightWinger RightNode OldNode}
                     end                    
                 else
                     {NodeRoot setRight({New Node init(T)})}
@@ -125,7 +144,7 @@ define
     fun {FullTreeFromFunction Expression}
         if {Length Expression} == 0 then
             nil
-        else ProcessedExpr Delete RootTree = {New Node init("@")} in
+        else ProcessedExpr RootTree = {New Node init("@")} in
             ProcessedExpr = {FunctionBinder {RemoveBrackers Expression}}
             _ = {ResolveMainTree RootTree {FunctionBinder ProcessedExpr}}
             {ReduceTree RootTree}       
@@ -140,6 +159,7 @@ define
             {Debinding RootTree}
             {Rebinding RootTree}
             {ReduceTree RootTree}
+            {Show "="}
         end
     end
 
@@ -213,7 +233,7 @@ define
     end
 
     fun {RemoveBrackers Expression}
-        if [{Nth Expression 1}] == "(" andthen [{Nth {Reverse Expression} 1}] == ")" andthen {Length Expression} > 2 then T ST NewValue in
+        if [{Nth Expression 1}] == "(" andthen [{Nth {Reverse Expression} 1}] == ")" andthen {Length Expression} > 2 then T ST in
             if {GetOneExprIntoBrackets Expression} == Expression then
                 _|T = Expression
                 _|ST = {Reverse T}            
@@ -233,7 +253,7 @@ define
             {RootTree getRight(RightNode)}
             if (LeftNode == nil) == false then {ResolveSubNodes LeftNode} end
             if (RightNode == nil) == false then {ResolveSubNodes RightNode} end
-            if (Value == "@") == false then _ = {ResolveMainTree RootTree Value} end  
+            if (Value == "@") == false then _ = {ResolveMainTree RootTree Value} end
         end
     end
 
@@ -247,7 +267,7 @@ define
     end
 
     fun {EvaluateOperation Oper RootTree Expression}
-        if {Contains Expression Oper} andthen (Expression == Oper) == false then H T Tokens LeftNode LeftValue RightNode RightValue SplitExpr in
+        if {Contains Expression Oper} andthen (Expression == Oper) == false then H T Tokens LeftNode LeftValue RightNode RightValue SplitExpr in 
             SplitExpr = {Join [" " Oper " "] ""}
             H|T = {Split Expression SplitExpr}
             if T == nil then
@@ -265,14 +285,14 @@ define
                 if (LeftValue == Oper) == false then
                     {RootTree setValue("@")}
                     {LeftNode setLeft({EvaluateOperation Oper LeftNode LeftValue})}
-                end                
+                end 
             end
             if (RightNode == nil) == false andthen {Contains Expression Oper} andthen (Expression == Oper) == false then
                 {RightNode getValue(RightValue)}
                 if (RightValue == nil) == false then
                     {RootTree setValue("@")}
                     {RootTree setRight({EvaluateOperation Oper RightNode RightValue})}
-                end                
+                end
             end
         end
 
@@ -344,7 +364,7 @@ define
     end
 
     proc {OperationDebinderOnTree RootTree}
-        local Value LeftNode RightNode NewValue in
+        local Value LeftNode RightNode in
             {RootTree getValue(Value)}
             {RootTree setValue({RemoveBrackers {Replace {Replace {Replace {OperationDebinder Value} "~" " "} "<" "("} ">" ")"}})}
 
@@ -356,10 +376,13 @@ define
     end
 
     proc {ResolveMainTreeCallBack RootTree FuncNamesList Expression}
-        if {Contains Expression " "} then H T in
+        if {Contains Expression " "} then H T FunctionName in
             H|T = {Split Expression " "}
-            if {ContainsAnyElement H FuncNamesList} then
-                {RootTree setLeft({New Node init(H)})}
+            FunctionName = H % Function Name
+            if {ContainsAnyElement H FuncNamesList} then NewLeftNode in
+                NewLeftNode = {New Node init(H)}
+                {NewLeftNode setFunctionName(H)}
+                {RootTree setLeft(NewLeftNode)}
                 if (T == nil) == false then NewExpr = {Join T " "} H1 T1 RightNode in
                     H1|T1 = {Split NewExpr " "}
                     if {ContainsAnyElement H1 FuncNamesList} then
@@ -392,20 +415,15 @@ define
         end
     end
 
-    proc {Virtual}
-        local 
-            Expression2 FuncNamesList
-        in
-            %Expression2 = "squence 4 1"
-            %Expression2 = "3 + 4 * (1 + 3)"
-            Expression2 = "3 + 4 * (1 + 3)"
-            FuncNamesList = ["square" "sqr"]
-            %Expression2 = "squence sequence y"
-            %Expression2 = "x * x"
-            
-            {PrintTree {FullTreeFromFunction Expression2}} % Full fill from function
-            %{PrintTree {FullTreeFromCallBack FuncNamesList Expression2}}
-            %{Show {CheckConsistence "*" Expression2}}
+    fun {IsNumber Input}
+        local Value ValueToEvaluate in
+            ValueToEvaluate = {Strip Input " "}
+            Value = if {IsString ValueToEvaluate} then
+                        try {StringToInt ValueToEvaluate} catch X then try {StringToFloat ValueToEvaluate} catch Y then ValueToEvaluate end end 
+                    else 
+                        ValueToEvaluate 
+                    end
+            if {IsInt Value} then true elseif {IsFloat Value} then true else false end                       
         end
     end
 
@@ -420,5 +438,20 @@ define
         end
     end
 
-    {Virtual}
+    proc {Virtual}
+        local 
+            Expression2 FuncNamesList
+        in
+            Expression2 = "square 1 - 1 "
+            FuncNamesList = ["square" "sqr"]
+            %Expression2 = "squence sequence y"
+            %Expression2 = "x * x"
+            
+            %{PrintTree {FullTreeFromFunction Expression2}} % Full fill from function
+            {PrintTree {FullTreeFromCallBack FuncNamesList Expression2}}
+            %{Show {CheckConsistence "*" Expression2}}
+        end
+    end
+
+    %{Virtual}
 end
