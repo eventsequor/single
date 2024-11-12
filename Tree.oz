@@ -114,7 +114,8 @@ define
     proc {PopulateTree Tokens NodeRoot}
         if {Length Tokens} == 1 then NodeValue in
             {NodeRoot getValue(NodeValue)}
-            if {Contains {Nth Tokens 1} "~"} == false andthen NodeValue == "@" then {NodeRoot setRight({New Node init({Nth Tokens 1})})} end
+            if {Length {Split {Nth Tokens 1} " "}} > 1 andthen {Contains {Nth Tokens 1} "~"} == false andthen NodeValue == "@" then {NodeRoot setRight({New Node init({Nth Tokens 1})})} end
+            if {Length {Split {Nth Tokens 1} " "}} == 1 then {NodeRoot setValue({Nth Tokens 1})} {NodeRoot setFunctionName({Nth Tokens 1})} end
         else H T OldLeftNode NewLeftNode in
             H|T = Tokens
             {NodeRoot setLeft({New Node init(H)})}
@@ -442,8 +443,8 @@ define
         local 
             Expression2 FuncNamesList
         in
-            Expression2 = "square 1 - 1 "
-            FuncNamesList = ["square" "sqr"]
+            Expression2 = "id p"
+            FuncNamesList = ["square" "id"]
             %Expression2 = "squence sequence y"
             %Expression2 = "x * x"
             

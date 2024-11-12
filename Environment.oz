@@ -1,8 +1,8 @@
 functor
 import
     System(showInfo:Show)
-    StringEder(strip:Strip split:Split replace:Replace)
-    Tree(isAnyElementInTree:IsAnyElementInTree isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
+    StringEder(strip:Strip split:Split replace:Replace contains:Contains)
+    Tree(isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
     Operator(resolve:Resolve)
 
 export
@@ -109,16 +109,18 @@ define
         end
 
         meth resolveFunction(RootTree)
-            if {IsAnyElementInTree RootTree ["*" "/" "+" "-"]} then
-                {Show "\n=========== Replace Argument ==============="}
-                {self functionArgReplacement(RootTree)}
-                {PrintTree RootTree}
+            {Show "\n=========== Replace Argument ==============="}
+            {self functionArgReplacement(RootTree)}
+            {PrintTree RootTree}
 
-                {Show "\n=========== And Reduce tree ================"}
-                {self reducer(RootTree)}
-                {PrintTree RootTree}
-                
-                {self resolveFunction(RootTree)}
+            {Show "\n=========== And Reduce tree ================"}
+            {self reducer(RootTree)}
+            {PrintTree RootTree}
+            local FunctionNames in 
+                {self getFunctionNames(FunctionNames)}
+                if {IsAnyFunctionToResolveInTree RootTree FunctionNames} then
+                    {self resolveFunction(RootTree)}
+                end
             end
         end
 
@@ -189,6 +191,7 @@ define
                                 {self replaceVariableValue(LeftNode VariableList)}                                
                                 local LeftValue SubLeftNode SubRightNode in
                                     {LeftNode getValue(LeftValue)}
+                                    
                                     {LeftNode getLeft(SubLeftNode)}
                                     {LeftNode getRight(SubRightNode)}
 
@@ -469,5 +472,28 @@ define
 
     fun {StringToNumber Input}
         try {StringToInt Input} catch X then try {StringToFloat Input} catch Y then Input end end         
+    end
+
+    fun {IsAnyFunctionToResolveInTree RootTree ElemList}
+        local Result = {NewCell false} in
+            for Elem in ElemList do
+                if @Result == false then {CheckIfANodeContainsFunction RootTree Elem Result} end
+            end
+            @Result            
+        end
+    end
+
+    proc {CheckIfANodeContainsFunction RootTree LookFor Result}
+        if (RootTree == nil) == false then Value LeftNode RightNode in
+            {RootTree getFunctionName(Value)}
+            if {Contains Value LookFor} then
+                Result := true
+            else
+                {RootTree getLeft(LeftNode)}
+                {RootTree getRight(RightNode)}
+                {CheckIfANodeContainsFunction LeftNode LookFor Result} 
+                {CheckIfANodeContainsFunction RightNode LookFor Result}            
+            end            
+        end      
     end
 end
