@@ -10,6 +10,7 @@ export
     ContainsAnyElement
     IsNumber
     IsAnyElementInTree
+    ResolvePendingFunc
 
 define
 
@@ -364,6 +365,32 @@ define
         end  
     end
 
+    proc {ResolvePendingFunc FuncNamesList RootTree}
+        if (RootTree == nil) == false then
+            local RootValue LeftNode RightNode in
+                {RootTree getValue(RootValue)}
+                {RootTree getLeft(LeftNode)}
+                {RootTree getRight(RightNode)}
+                
+                if {IsAnyElementIn RootValue ["*" "/" "+" "-" "@"]} == false andthen {IsAnyElementIn RootValue [" "]} then NewSubTree SubLeftNode SubRightNode NewValue FunctionName in
+                    NewSubTree = {FullTreeFromCallBack FuncNamesList RootValue}
+                    {NewSubTree getValue(NewValue)}
+                    {NewSubTree getLeft(SubLeftNode)}
+                    {NewSubTree getRight(SubRightNode)}
+                    
+                    FunctionName = {Nth {Split RootValue " "} 1}
+                    {RootTree setValue(NewValue)}
+                    {RootTree setFunctionName(FunctionName)}
+                    {RootTree setLeft(SubLeftNode)}                    
+                    {RootTree setRight(SubRightNode)}
+                end
+
+                {ResolvePendingFunc FuncNamesList LeftNode}
+                {ResolvePendingFunc FuncNamesList RightNode}
+            end
+        end
+    end
+
     proc {OperationDebinderOnTree RootTree}
         local Value LeftNode RightNode in
             {RootTree getValue(Value)}
@@ -443,11 +470,11 @@ define
         local 
             Expression2 FuncNamesList
         in
-            Expression2 = "id p"
-            FuncNamesList = ["square" "id"]
+            Expression2 = "fe (sqrt 4)"
+            FuncNamesList = ["fe" "sqrt"]
             %Expression2 = "squence sequence y"
             %Expression2 = "x * x"
-            
+
             %{PrintTree {FullTreeFromFunction Expression2}} % Full fill from function
             {PrintTree {FullTreeFromCallBack FuncNamesList Expression2}}
             %{Show {CheckConsistence "*" Expression2}}

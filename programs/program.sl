@@ -1,2 +1,3 @@
-fun square x = x * x
-square square 5
+fun id x = x * 2
+fun fe p = (id p) * p
+fe 3

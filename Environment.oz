@@ -2,7 +2,7 @@ functor
 import
     System(showInfo:Show)
     StringEder(strip:Strip split:Split replace:Replace contains:Contains)
-    Tree(isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
+    Tree(resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
     Operator(resolve:Resolve)
 
 export
@@ -77,25 +77,20 @@ define
             for Call in @callbacks do Expression RootTree FuncNamesList in
                 {Show "\nNew CallBack"}
                 {Call getExpression(Expression)}
-                {Show "Expression: " # Expression}
 
                 {self getFunctionNames(FuncNamesList)}
                 {Call getTree(FuncNamesList RootTree)}
-                {self reduceTree(RootTree)}
+                {self reduceTree(RootTree FuncNamesList)}
             end
         end
 
-        meth reduceTree(RootTree)
+        meth reduceTree(RootTree FuncNamesList)
             local NameOfFunctionsInTree = {NewCell nil} in
                 {Show "\n================ RootTree =================="}
                 {PrintTree RootTree}
                 {self getFunctionInSheets(RootTree NameOfFunctionsInTree)}
                 
-                {Show "\n===== Replace names func by its tree ========"}
-                for Value in @NameOfFunctionsInTree do
-                    {self replaceNameFuncByTree(RootTree Value)}
-                end
-                {PrintTree RootTree}
+                {self replaceNameByItsFun(RootTree FuncNamesList)}
 
                 {Show "\n============== Reduce tree =================="}
                 {self reducer(RootTree)}
@@ -105,6 +100,21 @@ define
 
                 {Show "\n============== Final Result ================="}
                 {PrintTree RootTree}
+            end
+        end
+
+        meth replaceNameByItsFun(RootTree FuncNamesList)
+            local NameOfFunctionsInTree = {NewCell nil} in
+                {self getFunctionInSheets(RootTree NameOfFunctionsInTree)}
+                if {Length @NameOfFunctionsInTree} > 0 then
+                    {Show "\n===== Replace names func by its tree ========"}
+                    for Value in @NameOfFunctionsInTree do
+                        {self replaceNameFuncByTree(RootTree Value)}
+                    end
+                    {ResolvePendingFunc FuncNamesList RootTree}
+                    {PrintTree RootTree}
+                    {self replaceNameByItsFun(RootTree FuncNamesList)}
+                end
             end
         end
 
@@ -119,7 +129,7 @@ define
             local FunctionNames in 
                 {self getFunctionNames(FunctionNames)}
                 if {IsAnyFunctionToResolveInTree RootTree FunctionNames} then
-                    {self resolveFunction(RootTree)}
+                   {self resolveFunction(RootTree)}
                 end
             end
         end
@@ -178,18 +188,19 @@ define
                     {RootTree getLeft(LeftNode)}
                     {RootTree getRight(RightNode)}
 
-                    if (LeftNode == nil) == false andthen (RightNode == nil) == false then RightValue in
+                    if (LeftNode == nil) == false andthen (RightNode == nil) == false then LeftValue RightValue in
                         {LeftNode getFunctionName(FunctionName)}
                         {self getFunctionNames(FunctionNames)}
                         {RightNode getValue(RightValue)}
+                        {LeftNode getValue(LeftValue)}
 
-                        if Value == "@" andthen {IsNumber RightValue} andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
+                        if Value == "@" andthen {ContainsAnyElement RightValue ["*" "/" "+" "-" "@" " "]} == false andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
                             {self getFunctionParameter(FunctionName VariableList)}
                             if (VariableList == nil) == false then ValuesList = {NewCell nil} in
                                 {self getContantAndRemoveSheet(RootTree ValuesList)}
                                 {self matchVariable(VariableList @ValuesList)}
                                 {self replaceVariableValue(LeftNode VariableList)}                                
-                                local LeftValue SubLeftNode SubRightNode in
+                                local LeftValue SubLeftNode SubRightNode ValueR ValueL in
                                     {LeftNode getValue(LeftValue)}
                                     
                                     {LeftNode getLeft(SubLeftNode)}
@@ -296,9 +307,8 @@ define
                             {FuncTree setFunctionName(FunctionName)}
                             {RootTree setLeft(FuncTree)}
                         end
-                    else
-                        {self replaceNameFuncByTree(LeftNode FunctionName)}
                     end
+                    {self replaceNameFuncByTree(LeftNode FunctionName)}
                 end
 
                 % Right node
@@ -316,8 +326,8 @@ define
                             {FuncTree setFunctionName(FunctionName)}
                             {RootTree setRight(FuncTree)}
                         end
-                        {self replaceNameFuncByTree(RightNode FunctionName)}
                     end
+                    {self replaceNameFuncByTree(RightNode FunctionName)}
                 end
 
             end
