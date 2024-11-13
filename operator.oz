@@ -14,8 +14,7 @@ define
     Mod = fun {$ A B}  A mod B end
     
    
-        % This is a kind of map of operations
-    
+    % This is a kind of map of operations    
     fun {GetOper Symbol}
         local 
             Operations = [{New Oper init("+" Add)} {New Oper init("-" Subtract)} {New Oper init("*" Multi)} {New Oper init("/" Divi)} {New Oper init("%" Mod)}]            
