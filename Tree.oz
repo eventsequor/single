@@ -470,13 +470,13 @@ define
         local 
             Expression2 FuncNamesList
         in
-            Expression2 = "x + 1 * 4"
+            Expression2 = "fe (sqrt 4)"
             FuncNamesList = ["fe" "sqrt"]
             %Expression2 = "squence sequence y"
             %Expression2 = "x * x"
 
             %{PrintTree {FullTreeFromFunction Expression2}} % Full fill from function
-            %{PrintTree {FullTreeFromCallBack FuncNamesList Expression2}}
+            {PrintTree {FullTreeFromCallBack FuncNamesList Expression2}}
             %{Show {CheckConsistence "*" Expression2}}
         end
     end

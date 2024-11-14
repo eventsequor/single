@@ -37,10 +37,6 @@ define
             end
         end
 
-        meth line_evaluator(Line)
-            {Show ""}
-        end
-
         meth getFunctions(Return)
             Return = @functions 
         end
@@ -118,16 +114,46 @@ define
 
         meth resolveFunction(RootTree)
             {Show "\n=========== Replace Argument ==============="}
+            % This function replace the argmentes into the function trees
             {self functionArgReplacement(RootTree)}
+
+            % This function replace the arguments into the any kind of tree
+            {self functionArgReplacement2(RootTree)}
             {PrintTree RootTree}
+            
 
             {Show "\n=========== And Reduce tree ================"}
             {self reducer(RootTree)}
+            {self checkIfTheAnswerIsInRight(RootTree)}
             {PrintTree RootTree}
             local FunctionNames in 
                 {self getFunctionNames(FunctionNames)}
                 if {IsAnyFunctionToResolveInTree RootTree FunctionNames} then
                    {self resolveFunction(RootTree)}
+                end
+            end
+        end
+
+        meth checkIfTheAnswerIsInRight(RootTree)
+            if (RootTree == nil) == false then
+                local LeftNode RightNode SubLeftNode SubRightNode RightValue in
+                    {RootTree getLeft(LeftNode)}
+                    {RootTree getRight(RightNode)}
+                    if LeftNode == nil andthen (RightNode == nil) == false then
+                        {RightNode getLeft(SubLeftNode)}
+                        {RightNode getRight(SubRightNode)}
+                        {RightNode getValue(RightValue)}
+                        
+                        if LeftNode == nil 
+                        andthen (RightNode == nil) == false 
+                        andthen {IsNumber RightValue} 
+                        andthen SubLeftNode == nil
+                        andthen SubRightNode == nil
+                        then
+                            {RootTree setValue(RightValue)}
+                            {RootTree setRight(nil)}
+                        end
+                    end
                 end
             end
         end
@@ -169,6 +195,37 @@ define
             end
         end
 
+        meth replaceVariableValueInFunctions(FunctionNames RootTree VariableList Result)
+            if (RootTree == nil) == false then ReplaceProc in
+                ReplaceProc = proc {$ RootTree} 
+                    local Value Result LeftNode RightNode in
+                        {RootTree getValue(Value)}
+                        Result = {Filter VariableList fun {$ Var} local VarName in {Var getName(VarName)} Value == VarName end end}
+                        if (Result == nil) == false then Variable VariableValue in
+                            Variable = {Nth Result 1}
+                            {Variable getValue(VariableValue)}
+                            if (VariableValue == nil) == false then {RootTree setValue(VariableValue)} end
+                        end
+                    end                
+                end
+
+                local LeftNode RightNode in
+                    {RootTree getLeft(LeftNode)}
+                    {RootTree getRight(RightNode)}
+                    if (LeftNode == nil) == false andthen (RightNode == nil) == false then FunctionName RightValue in
+                        {LeftNode getFunctionName(FunctionName)}
+                        {RightNode getValue(RightValue)}
+                        if {ContainsAnyElement FunctionName FunctionNames} andthen {IsNumber RightValue} then
+                            {ReplaceProc RightNode}
+                            Result := true
+                        end
+                        {self replaceVariableValueInFunctions(FunctionNames LeftNode VariableList Result)}
+                        {self replaceVariableValueInFunctions(FunctionNames RightNode VariableList Result)}
+                    end
+                end
+            end
+        end
+
         meth matchVariable(VariableList ValuesList)
             local Counter = {NewCell 1} in
                 for Variable in VariableList do
@@ -196,11 +253,56 @@ define
                             if Value == "@" andthen {ContainsAnyElement RightValue ["*" "/" "+" "-" "@" " "]} == false andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
                             
                                 {self getFunctionParameter(FunctionName VariableList)}
-                                if (VariableList == nil) == false then ValuesList = {NewCell nil} FunctionNameLeft FunctionNames SubRigh2 in
+                                if (VariableList == nil) == false then ValuesList = {NewCell nil} FunctionNameLeft SubRigh2 Result = {NewCell false} in
                                     {self getContantAndRemoveSheet(RootTree ValuesList)}
                                     {self matchVariable(VariableList @ValuesList)}
-                                    {self replaceVariableValue(LeftNode VariableList)}  
+                                    {self replaceVariableValueInFunctions(FunctionNames LeftNode VariableList Result)}
+                                    if @Result then
+                                        local LeftValue SubLeftNode SubRightNode in    
+                                            {LeftNode getValue(LeftValue)}
+                                            
+                                            {LeftNode getLeft(SubLeftNode)}
+                                            {LeftNode getRight(SubRightNode)}
+        
+                                            {RootTree setValue(LeftValue)}
+                                            {RootTree setLeft(SubLeftNode)}
+                                            {RootTree setRight(SubRightNode)}
+                                        end      
+                                    end                                 
+                                end
+                            end                            
+                        end
+                    end
 
+                    % Recursive call
+                    {self functionArgReplacement(LeftNode)}     
+                    {self functionArgReplacement(RightNode)}
+                end
+            end
+        end
+
+        meth functionArgReplacement2(RootTree)
+            if (RootTree == nil) == false then
+                local Value FunctionName RightNode RightValue LeftNode FunctionNames in
+                    {RootTree getValue(Value)}
+
+                    {RootTree getLeft(LeftNode)}
+                    {RootTree getRight(RightNode)}
+
+                    if (LeftNode == nil) == false andthen (RightNode == nil) == false then LeftValue RightValue in
+                        {LeftNode getFunctionName(FunctionName)}
+                        {self getFunctionNames(FunctionNames)}
+                        {RightNode getValue(RightValue)}
+                        {LeftNode getValue(LeftValue)}
+
+                        if ({IsNumber LeftValue} andthen {IsNumber RightValue}) == false then
+                            if Value == "@" andthen {ContainsAnyElement RightValue ["*" "/" "+" "-" "@" " "]} == false andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
+                            
+                                {self getFunctionParameter(FunctionName VariableList)}
+                                if (VariableList == nil) == false then ValuesList = {NewCell nil} FunctionNameLeft SubRigh2 in
+                                    {self getContantAndRemoveSheet(RootTree ValuesList)}
+                                    {self matchVariable(VariableList @ValuesList)}
+                                    {self replaceVariableValue(LeftNode VariableList)}
                                     local LeftValue SubLeftNode SubRightNode in    
                                         {LeftNode getValue(LeftValue)}
                                         
@@ -217,8 +319,8 @@ define
                     end
 
                     % Recursive call
-                    {self functionArgReplacement(LeftNode)}     
-                    {self functionArgReplacement(RightNode)}
+                    {self functionArgReplacement2(LeftNode)}     
+                    {self functionArgReplacement2(RightNode)}
                 end
             end
         end
@@ -453,10 +555,8 @@ define
                 Return = {FullTreeFromFunction @expression}
             elseif {Length {Split @expression " "}} == 1 then
                 Return = {FullTreeFromFunction @expression}
-            else Root RightNode in
-                Root = {FullTreeFromCallBack FuncNamesList @expression} 
-                {Root getRight(RightNode)}
-                Return = RightNode
+            else
+                Return = {FullTreeFromCallBack FuncNamesList @expression} 
             end            
         end        
     end

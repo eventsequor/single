@@ -1,3 +1,3 @@
-fun porfin x = x * x
-fun sub x = (porfin x) * 2
-sub 5
+fun square x = x * x
+fun id x = x / 2
+square square square (id 4)
