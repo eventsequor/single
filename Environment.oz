@@ -2,7 +2,7 @@ functor
 import
     System(showInfo:Show)
     StringEder(strip:Strip split:Split replace:Replace contains:Contains)
-    Tree(resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
+    Tree(isAnyElementIn:IsAnyElementIn resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
     Operator(resolve:Resolve)
 
 export
@@ -191,15 +191,17 @@ define
                         {self getFunctionNames(FunctionNames)}
                         {RightNode getValue(RightValue)}
                         {LeftNode getValue(LeftValue)}
+
                         if ({IsNumber LeftValue} andthen {IsNumber RightValue}) == false then
                             if Value == "@" andthen {ContainsAnyElement RightValue ["*" "/" "+" "-" "@" " "]} == false andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
                             
                                 {self getFunctionParameter(FunctionName VariableList)}
-                                if (VariableList == nil) == false then ValuesList = {NewCell nil} in
+                                if (VariableList == nil) == false then ValuesList = {NewCell nil} FunctionNameLeft FunctionNames SubRigh2 in
                                     {self getContantAndRemoveSheet(RootTree ValuesList)}
                                     {self matchVariable(VariableList @ValuesList)}
-                                    {self replaceVariableValue(LeftNode VariableList)}                                
-                                    local LeftValue SubLeftNode SubRightNode ValueR ValueL in
+                                    {self replaceVariableValue(LeftNode VariableList)}  
+
+                                    local LeftValue SubLeftNode SubRightNode in    
                                         {LeftNode getValue(LeftValue)}
                                         
                                         {LeftNode getLeft(SubLeftNode)}
@@ -208,9 +210,9 @@ define
                                         {RootTree setValue(LeftValue)}
                                         {RootTree setLeft(SubLeftNode)}
                                         {RootTree setRight(SubRightNode)}
-                                    end     
+                                    end                                       
                                 end
-                            end
+                            end                            
                         end
                     end
 
@@ -300,9 +302,11 @@ define
                     if LeftValue == FunctionName then Functions LocalFuncs FuncTree in
                         {self getFunctions(Functions)}
                         LocalFuncs = {Filter Functions fun {$ F} local Nm in {F getFuncName(Nm)} Nm == FunctionName  end end}
-                        if {Length LocalFuncs} > 0 then Fun in
+                        if {Length LocalFuncs} > 0 then Fun FuncNamesList in
                             Fun = {Nth LocalFuncs 1}
-                            {Fun getTree(FuncTree)}
+
+                            {self getFunctionNames(FuncNamesList)}
+                            {Fun getTree(FuncNamesList FuncTree)}
 
                             {FuncTree setFunctionName(FunctionName)}
                             {RootTree setLeft(FuncTree)}
@@ -319,9 +323,11 @@ define
                     if RightValue == FunctionName then Functions LocalFuncs FuncTree in
                         {self getFunctions(Functions)}
                         LocalFuncs = {Filter Functions fun {$ F} local Nm in {F getFuncName(Nm)} Nm == FunctionName  end end}
-                        if {Length LocalFuncs} > 0 then Fun in
+                        if {Length LocalFuncs} > 0 then Fun FuncNamesList in
                             Fun = {Nth LocalFuncs 1}
-                            {Fun getTree(FuncTree)}
+
+                            {self getFunctionNames(FuncNamesList)}
+                            {Fun getTree(FuncNamesList FuncTree)}
 
                             {FuncTree setFunctionName(FunctionName)}
                             {RootTree setRight(FuncTree)}
@@ -442,8 +448,16 @@ define
             Return = @name
         end
 
-        meth getTree(Return)
-            Return = {FullTreeFromFunction @expression}
+        meth getTree(FuncNamesList Return)
+            if {IsAnyElementIn @expression ["*" "/" "+" "-"]} then
+                Return = {FullTreeFromFunction @expression}
+            elseif {Length {Split @expression " "}} == 1 then
+                Return = {FullTreeFromFunction @expression}
+            else Root RightNode in
+                Root = {FullTreeFromCallBack FuncNamesList @expression} 
+                {Root getRight(RightNode)}
+                Return = RightNode
+            end            
         end        
     end
 

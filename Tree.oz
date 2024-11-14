@@ -11,6 +11,7 @@ export
     IsNumber
     IsAnyElementInTree
     ResolvePendingFunc
+    IsAnyElementIn
 
 define
 
