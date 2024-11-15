@@ -12,6 +12,7 @@ export
     IsAnyElementInTree
     ResolvePendingFunc
     IsAnyElementIn
+    ReduceTree
 
 define
 

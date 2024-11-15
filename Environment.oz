@@ -1,8 +1,8 @@
 functor
 import
     System(showInfo:Show)
-    StringEder(strip:Strip split:Split replace:Replace contains:Contains)
-    Tree(isAnyElementIn:IsAnyElementIn resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
+    StringEder(join:Join strip:Strip split:Split replace:Replace contains:Contains)
+    Tree(reduceTree:ReduceTree isAnyElementIn:IsAnyElementIn resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
     Operator(resolve:Resolve)
 
 export
@@ -45,6 +45,18 @@ define
             local Functions in
                 {self getFunctions(Functions)}
                 Return = {Map Functions fun {$ F} local Name in {F getFuncName(Name)} Name end end}
+            end
+        end
+
+        meth getFunctionExpressionArgs(FunctionName Return)
+            local Functions Found in
+                {self getFunctions(Functions)}
+                Found = {Filter Functions fun {$ F} local Name in {F getFuncName(Name)} FunctionName == Name end end}
+                if (Found == nil) == false andthen {Length Found} > 0 then
+                    {{Nth Found 1} getExpressionArgs(Return)}
+                else
+                    Return = nil
+                end
             end
         end
 
@@ -102,8 +114,16 @@ define
                 {self getFunctionInSheets(RootTree NameOfFunctionsInTree)}
                 if {Length @NameOfFunctionsInTree} > 0 then
                     {Show "\n===== Replace names func by its tree ========"}
-                    for Value in @NameOfFunctionsInTree do
+                    for Value in @NameOfFunctionsInTree do FunctionNames VariableList in
                         {self replaceNameFuncByTree(RootTree Value)}
+                        {self getFunctionNames(FunctionNames)}
+                        {PrintTree RootTree}
+                        {self getFunctionExpressionArgs(Value VariableList)}
+                        
+                        if (VariableList == nil) == false andthen {Length VariableList} > 0 then
+                            {self replaceVariableValue(RootTree VariableList)}                  
+                            {ReduceTree RootTree}          
+                        end
                     end
                     {ResolvePendingFunc FuncNamesList RootTree}
                     {PrintTree RootTree}
@@ -177,7 +197,7 @@ define
         end
 
         meth replaceVariableValue(RootTree VariableList)
-            if (RootTree == nil) == false then
+            if (RootTree == nil) == false andthen (VariableList == nil) == false then
                 local Value Result RightNode LeftNode in
                     {RootTree getValue(Value)}
                     Result = {Filter VariableList fun {$ Var} local VarName in {Var getName(VarName)} Value == VarName end end}
@@ -186,8 +206,8 @@ define
                         {Variable getValue(VariableValue)}
                         if (VariableValue == nil) == false then {RootTree setValue(VariableValue)} end
                     end
-                    {RootTree getRight(RightNode)}
                     {RootTree getLeft(LeftNode)}
+                    {RootTree getRight(RightNode)}
 
                     {self replaceVariableValue(LeftNode VariableList)}
                     {self replaceVariableValue(RightNode VariableList)}
@@ -486,7 +506,7 @@ define
         attr name expression value
         meth init(Instruction) 
             if {Length {Split Instruction " "}} == 1 then
-                name := Instruction
+                name := {Strip Instruction " "}
                 expression := ""
                 value := nil
             else
@@ -518,11 +538,11 @@ define
     end
 
     class Function
-        attr name args expression
+        attr name args expression expressionArgs
         meth init(Line)
             name := {GetNameVariableOrFunction Line}
             args := nil
-            
+            expressionArgs := nil
             for Arg in {GetArgs Line} do
                 if @args == nil then
                     args := [{New Variable init(Arg)}]
@@ -531,10 +551,37 @@ define
                 end
             end
 
-            local T Expression in
+            local T in
                 _|T = {Split Line "="}
-                {VirtualString.toString {FoldL T fun {$ X Y} X#"="#Y end ""} ?Expression}
-                expression := {Strip {Strip Expression "="} " "}
+                {self checkFunction({Strip {Join T "="} " "})}
+            end
+        end
+
+        meth getExpressionArgs(Return)
+            Return = @expressionArgs
+        end
+
+        meth checkFunction(Expression)
+            {Show "what is the expr " # Expression}
+            if {Contains Expression "in"} then H T Variables in
+                H|T = {Split Expression "in"}
+                expression := {Strip {Join T ""} " "}
+                for Var in {Filter {Split H "var"} fun {$ V} {Contains V "="} end} do H T VarNam VarValue in
+                    H|T = {Split Var "="}
+                    VarNam = H
+                    VarValue = {Join T ""}
+                    if @expressionArgs == nil then Arg in
+                        Arg = {New Variable init(VarNam)}
+                        {Arg setValue(VarValue)}
+                        expressionArgs := [Arg]
+                    else Arg in
+                        Arg = {New Variable init(VarNam)}
+                        {Arg setValue(VarValue)}
+                        expressionArgs := {Append @expressionArgs [Arg]}
+                    end
+                end
+            else
+                expression := {Strip {Replace Expression "=" ""} " "}
             end
         end
 
