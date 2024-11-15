@@ -1,58 +1,85 @@
-# Single language
+# ======== Single ========
 
-This is a functional language only create to operate with variable of type number, the idea is create complex programs
+# Content
+- [======== Single ========](#-single-)
+- [Content](#content)
+  - [Homework](#homework)
+    - [Task 1](#task-1)
+    - [Task 2](#task-2)
+    - [Task 3](#task-3)
+    - [Task 4](#task-4)
+  - [How to execute a program?](#how-to-execute-a-program)
+  - [What is single?](#what-is-single)
+  - [Syntax](#syntax)
 
-## Example of language
 
+
+## Homework
+### Task 1
+ The step 0 in the implementation of template instantiation is to build the graph to represent the program. The graph consists of a tree describing the structure of the program with pointers referencing a same node (to avoid repeated evaluation). The graph is composed of two types of nodes (in its simplest representation)
+
+  1. leaf nodes: representing constants (numbers) or variables 
+  2. @ nodes: representing function applications
+
+The follwing tree represent the next code, and also represent the implementation that we did to solve the requeriment
+
+Function
 ``` single
-
-// Declare variables
-var X = 3
-var Y = 4
-var Z = 5
-
-// Call function
-fun add(var a, var b):
-    return a + b
-end
-
-// call function, expected 12
-var Result = add(add(X, Y) Z)
+fun square x = x * x
+square square 4
 ```
 
-``` Mozart
-proc {Test}
-    local 
-        Node1
-        Node2
-        Node3
-        Node4
-        Node5
-        Node6
-        Tokens
-        Root
-    in
-        %Node1 = {New Node init("a")}
-        %Node2 = {New Node init("b")}
-        %Node3 = {New Node init("c")}
-        %Node4 = {New Node init("d")}
-        %Node5 = {New Node init("e")}
-        %Node6 = {New Node init("f")}
-        %% Add children node 1
-        %{Node1 setLeft(Node2)}
-        %{Node1 setRight(Node3)}
-
-        % Add children node 2
-        %{Node2 setLeft(Node4)}
-        %{Node2 setRight(Node5)}
-        %{Node5 setLeft(Node6)}
-        %{PrintTree Node1}
-        %{PrintTree {FullFillTree {Join {Infix2Prefix {Str2Lst "square square 2"}} " "}}} %% FUNCTION TREE
-        %{Show "\n\n========\n\n"}
-        %{PrintTree {FullFillTree {Join {Infix2Prefix {Str2Lst "(x+1) * (x-1)"}} " "}}} %% CALLBACK TREE
-        %{Show "\n\n========\n\n"}
-        {PrintTree {FullFillTree "square square 3"}}
-        {Show "something"}
-    end
-end
+It's root tree
+``` shell
+@
+├─square
+└─@
+  ├─square
+  └─4
 ```
+
+### Task 2
+Find the next expression to reduce. The expression to reduce must always be the outermost expression in the tree.
+
+1. Follow the left branch of the application nodes, starting at the root, until you get to a supercombinator or built-in primitive.
+   
+2. Check how many arguments the supercombinator or primitive takes and go back up that number of application nodes; you have now found the root of the outermost function application.
+   
+Function
+``` single
+fun square x = x * x
+square square 4
+```
+
+It's root tree
+``` shell
+@
+├─square
+└─@
+  ├─square
+  └─4
+```
+
+It's reduce tree
+```shell
+@
+├─@
+  ├─*
+  └─@
+    ├─x
+    └─x
+└─@
+  ├─@
+    ├─*
+    └─@
+      ├─x
+      └─x
+  └─4
+```
+### Task 3
+### Task 4
+
+## How to execute a program?
+## What is single?
+
+## Syntax

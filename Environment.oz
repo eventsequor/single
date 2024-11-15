@@ -249,8 +249,10 @@ define
         meth matchVariable(VariableList ValuesList)
             local Counter = {NewCell 1} in
                 for Variable in VariableList do
-                    {Variable setValue({Nth ValuesList @Counter})}
-                    Counter := @Counter + 1
+                    if @Counter < ({Length VariableList} + 1) then
+                        {Variable setValue({Nth ValuesList @Counter})}
+                        Counter := @Counter + 1
+                    end
                 end
             end
         end
