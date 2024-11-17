@@ -28,7 +28,7 @@ define
    
    proc {Test1}
       local Path ProgramLines RootScope Functions in
-         Path = "programs/program.sl"
+         Path = "programs/program4.sl"
          ProgramLines = {ReadProgram Path}
          {PrintProgram ProgramLines}
          RootScope = {New Scope init(ProgramLines)}
