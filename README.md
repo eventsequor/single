@@ -46,6 +46,7 @@ Find the next expression to reduce. The expression to reduce must always be the 
 2. Check how many arguments the supercombinator or primitive takes and go back up that number of application nodes; you have now found the root of the outermost function application.
    
 Function
+
 ``` single
 fun square x = x * x
 square square 4

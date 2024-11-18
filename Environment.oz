@@ -117,9 +117,7 @@ define
                     for Value in @NameOfFunctionsInTree do FunctionNames VariableList in
                         {self replaceNameFuncByTree(RootTree Value)}
                         {self getFunctionNames(FunctionNames)}
-                        {PrintTree RootTree}
                         {self getFunctionExpressionArgs(Value VariableList)}
-                        
                         if (VariableList == nil) == false andthen {Length VariableList} > 0 then
                             {self replaceVariableValue(RootTree VariableList)}                  
                             {ReduceTree RootTree}          
@@ -204,7 +202,7 @@ define
                     if (Result == nil) == false then Variable VariableValue in
                         Variable = {Nth Result 1}
                         {Variable getValue(VariableValue)}
-                        if (VariableValue == nil) == false then {RootTree setValue(VariableValue)} end
+                        if (VariableValue == nil) == false then {RootTree setValue({Strip VariableValue " "})} end
                     end
                     {RootTree getLeft(LeftNode)}
                     {RootTree getRight(RightNode)}
