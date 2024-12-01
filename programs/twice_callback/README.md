@@ -1,94 +1,94 @@
 
-# Function square callback
+# Function twice callback
 
 The following 
 ``` single
-fun square x = x * x
-square square 4
+fun twice x = x + x
+twice twice 5
 ```
 
 Solution
 
 ``` shell
 ========= Starting print the program =======
-fun square x = x * x
-square square 4
+fun twice x = x + x
+twice twice 5
 ============= End of program ===============
 
-what is the expr x * x
+what is the expr x + x
 ===== Starting callbacks resolution ========
 
 New CallBack
 
 ================ RootTree ==================
 @
-├─square
+├─twice
 └─@
-  ├─square
-  └─4
+  ├─twice
+  └─5
 
 ===== Replace names func by its tree ========
 @
 ├─@
-  ├─*
+  ├─+
   └─@
     ├─x
     └─x
 └─@
   ├─@
-    ├─*
+    ├─+
     └─@
       ├─x
       └─x
-  └─4
+  └─5
 
 ============== Reduce tree ==================
 @
 ├─@
-  ├─*
+  ├─+
   └─@
     ├─x
     └─x
 └─@
   ├─@
-    ├─*
+    ├─+
     └─@
       ├─x
       └─x
-  └─4
+  └─5
 
 =========== Replace Argument ===============
 @
 ├─@
-  ├─*
+  ├─+
   └─@
     ├─x
     └─x
 └─@
-  ├─*
+  ├─+
   └─@
-    ├─4
-    └─4
+    ├─5
+    └─5
 
 =========== And Reduce tree ================
 @
 ├─@
-  ├─*
+  ├─+
   └─@
     ├─x
     └─x
-└─16
+└─10
 
 =========== Replace Argument ===============
 @
-├─*
+├─+
 └─@
-  ├─16
-  └─16
+  ├─10
+  └─10
 
 =========== And Reduce tree ================
-256
+20
 
 ============== Final Result =================
-256
+20
 ```

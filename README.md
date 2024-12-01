@@ -79,7 +79,14 @@ It's reduce tree
   └─4
 ```
 ### Task 3
+Reduce the expression (a.k.a evaluate). For built-in primitives you have to
+evaluate them, for supercombinators replace their de nition into the tree
+
 ### Task 4
+Update the expression with the result of the evaluation.
+  Note that not all programs need to be reducible (for example if the evaluation is not
+  complete as variables are not known; the reduction of the expression x + x is itself if a
+  value for x is unknown)
 
 ## How to execute a program?
 
@@ -90,6 +97,8 @@ Single is a functional language programing that only can operate simple operatio
 
 ## Programs examples
 - [square](programs/square/README.md)
-- 2
+- [fourtimes](programs/fourtimes/README.md)
 - 3
 ## Syntax
+- Functions are defined by "fun"
+- Variables are defined by "var"
