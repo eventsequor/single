@@ -79,8 +79,57 @@ It's reduce tree
   └─4
 ```
 ### Task 3
-Reduce the expression (a.k.a evaluate). For built-in primitives you have to
-evaluate them, for supercombinators replace their de nition into the tree
+Reduce the expression (a.k.a evaluate). For built-in primitives you have to evaluate them, for supercombinators replace their definition into the tree.
+
+The first reduced tree
+
+``` shell
+@
+├─@
+  ├─*
+  └─@
+    ├─x
+    └─x
+└─@
+  ├─@
+    ├─*
+    └─@
+      ├─x
+      └─x
+  └─4
+```
+Replace 1
+```
+@
+├─@
+  ├─*
+  └─@
+    ├─x
+    └─x
+└─@
+  ├─*
+  └─@
+    ├─4
+    └─4
+```
+Evaluate 1
+```
+@
+├─@
+  ├─*
+  └─@
+    ├─x
+    └─x
+└─16
+```
+Replace 2
+```
+@
+├─*
+└─@
+  ├─16
+  └─16
+```
 
 ### Task 4
 Update the expression with the result of the evaluation.
@@ -88,17 +137,56 @@ Update the expression with the result of the evaluation.
   complete as variables are not known; the reduction of the expression x + x is itself if a
   value for x is unknown)
 
+Final evaluation
+
+```
+256
+```
+
 ## How to execute a program?
 
-
+Programs can be executed 
 
 ## What is single?
 Single is a functional language programing that only can operate simple operations with numbers
 
 ## Programs examples
 - [square](programs/square/README.md)
+- [arithmetic](programs/arithmetic/README.md)
+- [div](programs/div/README.md)
 - [fourtimes](programs/fourtimes/README.md)
-- 3
+- [fourtimes callback](programs/fourtimes_callback/README.md)
+- [id](programs/id/README.md)
+- [sqr](programs/sqr/README.md)
+- [square](programs/square/README.md)
+- [square callback](programs/square_callback/README.md)
+- [sum n](programs/sum_n/README.md)
+- [sum n callback](programs/sum_n_callback/README.md)
+- [sum sub](programs/sum_sub/README.md)
+- [twice](programs/twice/README.md)
+- [twice callback](programs/twice_callback/README.md)
+
 ## Syntax
-- Functions are defined by "fun"
-- Variables are defined by "var"
+
+
+- `fun` keyword is used to define a function.
+```
+fun function_name 
+```
+
+- A function is invoked by writing its name followed by its arguments, separated by spaces.
+
+```
+function_name param1 param2 ... paramN
+```
+
+- All functions are designed to solve operations such as: `+, -, *, /, %`
+
+
+- The use of `let ... in ... end` are to declare variables locally.
+
+- Some programs use `var` for local variable.
+
+- Function calls follow parenthesis order of evaluation.
+
+- Variables and operators should always be separated by a space.

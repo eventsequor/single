@@ -1,32 +1,29 @@
 
-# Function sum n
+# Function sqr
 
 The following function
 ``` single
-fun sum_n x y z n = (x + y + z) * n
-sum_n 1 4 3 2
+fun sqr x = (x + 1) * (x - 1)
+sqr 4
 ```
 
 Solution
 
 ``` shel
 ========= Starting print the program =======
-fun sum_n x y z n = (x + y + z) * n
-sum_n 1 4 3 2
+fun sqr x = (x + 1) * (x - 1)
+sqr 4
 ============= End of program ===============
 
-what is the expr (x + y + z) * n
+what is the expr (x + 1) * (x - 1)
 ===== Starting callbacks resolution ========
 
 New CallBack
 
 ================ RootTree ==================
 @
-├─sum_n
-└─1
-  └─4
-    └─3
-      └─2
+├─sqr
+└─4
 
 ===== Replace names func by its tree ========
 @
@@ -37,16 +34,13 @@ New CallBack
       ├─+
       └─@
         ├─x
-        └─@
-          ├─+
-          └─@
-            ├─y
-            └─z
-    └─n
-└─1
-  └─4
-    └─3
-      └─2
+        └─1
+    └─@
+      ├─-
+      └─@
+        ├─x
+        └─1
+└─4
 
 ============== Reduce tree ==================
 @
@@ -57,16 +51,13 @@ New CallBack
       ├─+
       └─@
         ├─x
-        └─@
-          ├─+
-          └─@
-            ├─y
-            └─z
-    └─n
-└─1
-  └─4
-    └─3
-      └─2
+        └─1
+    └─@
+      ├─-
+      └─@
+        ├─x
+        └─1
+└─4
 
 =========== Replace Argument ===============
 @
@@ -75,17 +66,17 @@ New CallBack
   ├─@
     ├─+
     └─@
-      ├─1
-      └─@
-        ├─+
-        └─@
-          ├─4
-          └─3
-  └─2
+      ├─4
+      └─1
+  └─@
+    ├─-
+    └─@
+      ├─4
+      └─1
 
 =========== And Reduce tree ================
-16
+15
 
 ============== Final Result =================
-16
+15
 ```
