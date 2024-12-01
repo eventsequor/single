@@ -10,6 +10,7 @@
     - [Task 4](#task-4)
   - [How to execute a program?](#how-to-execute-a-program)
   - [What is single?](#what-is-single)
+  - [Programs examples](#programs-examples)
   - [Syntax](#syntax)
 
 
@@ -81,8 +82,14 @@ It's reduce tree
 ### Task 4
 
 ## How to execute a program?
+
+
+
 ## What is single?
 Single is a functional language programing that only can operate simple operations with numbers
 
-
+## Programs examples
+- [square](programs/square/README.md)
+- 2
+- 3
 ## Syntax

@@ -7,6 +7,8 @@ fun square x = x * x
 square 4
 ```
 
+Solution
+
 ``` shel
 ========= Starting print the program =======
 fun square x = x * x
