@@ -82,5 +82,7 @@ It's reduce tree
 
 ## How to execute a program?
 ## What is single?
+Single is a functional language programing that only can operate simple operations with numbers
+
 
 ## Syntax

@@ -13,6 +13,7 @@ export
     ResolvePendingFunc
     IsAnyElementIn
     ReduceTree
+    AddNodeToRightEnd
 
 define
 
@@ -375,6 +376,8 @@ define
                 
                 if {IsAnyElementIn RootValue ["*" "/" "+" "-" "@"]} == false andthen {IsAnyElementIn RootValue [" "]} then NewSubTree SubLeftNode SubRightNode NewValue FunctionName in
                     NewSubTree = {FullTreeFromCallBack FuncNamesList RootValue}
+                    {AddNodeToRightEnd NewSubTree RightNode}
+
                     {NewSubTree getValue(NewValue)}
                     {NewSubTree getLeft(SubLeftNode)}
                     {NewSubTree getRight(SubRightNode)}
@@ -388,6 +391,17 @@ define
 
                 {ResolvePendingFunc FuncNamesList LeftNode}
                 {ResolvePendingFunc FuncNamesList RightNode}
+            end
+        end
+    end
+
+    proc {AddNodeToRightEnd RootTree NodeToAppend}
+        if (RootTree == nil) == false then RightNode in
+            {RootTree getRight(RightNode)}
+            if RightNode == nil then
+                {RootTree setRight(NodeToAppend)}
+            else
+                {AddNodeToRightEnd RightNode NodeToAppend}
             end
         end
     end

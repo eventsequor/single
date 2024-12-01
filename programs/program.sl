@@ -1,3 +1,3 @@
-fun acu x = x + 1
-fun oper x = (acu x) / (acu x) + (2 * 2)
-oper 5
+fun resta x y = x - y
+fun oper x y = x + y
+oper (resta 8 4) (resta 10 5)

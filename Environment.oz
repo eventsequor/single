@@ -1,8 +1,8 @@
 functor
 import
-    System(showInfo:Show)
+    System(showInfo:Show print:Print)
     StringEder(join:Join strip:Strip split:Split replace:Replace contains:Contains)
-    Tree(reduceTree:ReduceTree isAnyElementIn:IsAnyElementIn resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
+    Tree(addNodeToRightEnd:AddNodeToRightEnd reduceTree:ReduceTree isAnyElementIn:IsAnyElementIn resolvePendingFunc:ResolvePendingFunc isNumber:IsNumber fullTreeFromFunction:FullTreeFromFunction fullTreeFromCallBack:FullTreeFromCallBack printTree:PrintTree containsAnyElement:ContainsAnyElement)
     Operator(resolve:Resolve)
 
 export
@@ -118,9 +118,10 @@ define
                         {self replaceNameFuncByTree(RootTree Value)}
                         {self getFunctionNames(FunctionNames)}
                         {self getFunctionExpressionArgs(Value VariableList)}
+
                         if (VariableList == nil) == false andthen {Length VariableList} > 0 then
-                            {self replaceVariableValue(RootTree VariableList)}                  
-                            {ReduceTree RootTree}          
+                            {self replaceVariableValue(RootTree VariableList)}              
+                            {ReduceTree RootTree}      
                         end
                     end
                     {ResolvePendingFunc FuncNamesList RootTree}
@@ -129,6 +130,7 @@ define
                 end
             end
         end
+        
 
         meth resolveFunction(RootTree)
             {Show "\n=========== Replace Argument ==============="}
@@ -186,10 +188,9 @@ define
                         else
                             ValuesList := {Append @ValuesList [Value]}
                         end
-                    end
-
-                    {RootTree getRight(RightNode)}
-                    {self getContantAndRemoveSheet(RightNode ValuesList)}
+                        {RootTree getRight(RightNode)}
+                        {self getContantAndRemoveSheet(RightNode ValuesList)}
+                    end                    
                 end
             end
         end
@@ -271,24 +272,33 @@ define
 
                         if ({IsNumber LeftValue} andthen {IsNumber RightValue}) == false then
                             if Value == "@" andthen {ContainsAnyElement RightValue ["*" "/" "+" "-" "@" " "]} == false andthen {ContainsAnyElement FunctionName FunctionNames} then VariableList in
-                            
-                                {self getFunctionParameter(FunctionName VariableList)}
+                                {self getFunctionParameter(FunctionName VariableList)}                                
                                 if (VariableList == nil) == false then ValuesList = {NewCell nil} FunctionNameLeft SubRigh2 Result = {NewCell false} in
-                                    {self getContantAndRemoveSheet(RootTree ValuesList)}
-                                    {self matchVariable(VariableList @ValuesList)}
-                                    {self replaceVariableValueInFunctions(FunctionNames LeftNode VariableList Result)}
-                                    if @Result then
-                                        local LeftValue SubLeftNode SubRightNode in    
-                                            {LeftNode getValue(LeftValue)}
-                                            
-                                            {LeftNode getLeft(SubLeftNode)}
-                                            {LeftNode getRight(SubRightNode)}
-        
-                                            {RootTree setValue(LeftValue)}
-                                            {RootTree setLeft(SubLeftNode)}
-                                            {RootTree setRight(SubRightNode)}
-                                        end      
-                                    end                                 
+                                    
+                                    {self getContantAndRemoveSheet(RightNode ValuesList)}    
+
+                                    if {Length @ValuesList} >= {Length VariableList} then NodeIsNoVariable in
+
+                                        NodeIsNoVariable = {LookForLastRightNode RightNode 1 {Length VariableList}}
+
+                                        {self matchVariable(VariableList @ValuesList)}                                    
+                                        {self replaceVariableValueInFunctions(FunctionNames LeftNode VariableList Result)}
+                                        if @Result then
+                                            local LeftValue SubLeftNode SubRightNode in    
+                                                {LeftNode getValue(LeftValue)}
+                                                
+                                                {LeftNode getLeft(SubLeftNode)}
+                                                {LeftNode getRight(SubRightNode)}
+
+                                                {AddNodeToRightEnd SubRightNode NodeIsNoVariable}
+            
+                                                {RootTree setValue(LeftValue)}
+                                                {RootTree setLeft(SubLeftNode)}
+                                                {RootTree setRight(SubRightNode)}
+                                            end      
+                                        end
+                                    end
+                                    %==========                                                                                                 
                                 end
                             end                            
                         end
@@ -320,19 +330,28 @@ define
                             
                                 {self getFunctionParameter(FunctionName VariableList)}
                                 if (VariableList == nil) == false then ValuesList = {NewCell nil} FunctionNameLeft SubRigh2 in
-                                    {self getContantAndRemoveSheet(RootTree ValuesList)}
-                                    {self matchVariable(VariableList @ValuesList)}
-                                    {self replaceVariableValue(LeftNode VariableList)}
-                                    local LeftValue SubLeftNode SubRightNode in    
-                                        {LeftNode getValue(LeftValue)}
+                                    {self getContantAndRemoveSheet(RightNode ValuesList)}
+
+                                    if {Length @ValuesList} >= {Length VariableList} then NodeIsNoVariable in
+
+                                        NodeIsNoVariable = {LookForLastRightNode RightNode 1 {Length VariableList}}
+                                        {self matchVariable(VariableList @ValuesList)}
+                                        {self replaceVariableValue(LeftNode VariableList)}
                                         
-                                        {LeftNode getLeft(SubLeftNode)}
-                                        {LeftNode getRight(SubRightNode)}
-    
-                                        {RootTree setValue(LeftValue)}
-                                        {RootTree setLeft(SubLeftNode)}
-                                        {RootTree setRight(SubRightNode)}
-                                    end                                       
+                                        local LeftValue SubLeftNode SubRightNode in    
+                                            {LeftNode getValue(LeftValue)}
+                                            
+                                            {LeftNode getLeft(SubLeftNode)}
+                                            {LeftNode getRight(SubRightNode)}
+
+                                            {AddNodeToRightEnd SubRightNode NodeIsNoVariable}
+        
+                                            {RootTree setValue(LeftValue)}
+                                            {RootTree setLeft(SubLeftNode)}
+                                            {RootTree setRight(SubRightNode)}
+                                        end
+                                    end
+                                    %===========
                                 end
                             end                            
                         end
@@ -416,8 +435,10 @@ define
 
         meth replaceNameFuncByTree(RootTree FunctionName)
             local LeftValue LeftNode RightValue RightNode in
-                % Left node
                 {RootTree getLeft(LeftNode)}
+                {RootTree getRight(RightNode)}
+
+                % Left node                
                 if (LeftNode == nil) == false then FunctionName in
                     {LeftNode getFunctionName(FunctionName)}
                     {LeftNode getValue(LeftValue)}
@@ -437,8 +458,7 @@ define
                     {self replaceNameFuncByTree(LeftNode FunctionName)}
                 end
 
-                % Right node
-                {RootTree getRight(RightNode)}
+                % Right node                
                 if (RightNode == nil) == false then FunctionName in
                     {RightNode getFunctionName(FunctionName)}
                     {RightNode getValue(RightValue)}
@@ -457,7 +477,6 @@ define
                     end
                     {self replaceNameFuncByTree(RightNode FunctionName)}
                 end
-
             end
         end
 
@@ -480,6 +499,16 @@ define
             
         end
     end    
+
+    fun {LookForLastRightNode RootNode Number Level} 
+        if Number =< Level then RightN NewLevel in
+            {RootNode getRight(RightN)}
+            NewLevel = (Number + 1)
+            {LookForLastRightNode RightN NewLevel Level}
+        else
+            RootNode
+        end 
+    end
 
     class CallBack
         attr name expression
