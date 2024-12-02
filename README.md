@@ -8,10 +8,10 @@
     - [Task 2](#task-2)
     - [Task 3](#task-3)
     - [Task 4](#task-4)
-  - [What is single?](#what-is-single)
+  - [What is Single?](#what-is-single)
   - [How to execute a program?](#how-to-execute-a-program)
   - [Syntax](#syntax)
-  - [Programs examples](#programs-examples)
+  - [Program examples](#program-examples)
 
 
 ## Homework
@@ -234,17 +234,88 @@ sum_n 1 (sum_n 1 1 1 2) 3 2
 - Variables and operators should always be separated by a space.
 
 ## Program examples
+You have to be in the root folder of the project to run all examples, however you can see each example executed in its Readme.md file through its link
+
 - [square](programs/square/README.md)
+  
+  compile ``ozc -c programs/square/SquareTest.oz``
+
+  execute ``ozengine SquareTest.ozf``
+
 - [arithmetic](programs/arithmetic/README.md)
+
+  compile  ``ozc -c programs/arithmetic/ArithmeticTest.oz``
+
+  execute ``ozengine ArithmeticTest.ozf ``
+
 - [div](programs/div/README.md)
+  
+  compile ``ozc -c programs/div/DivTest.oz``
+
+  execute ``ozengine DivTest.ozf``
+
 - [fourtimes](programs/fourtimes/README.md)
+
+  compile ``ozc -c programs/fourtimes/FourtimesTest.oz``
+
+  execute ``ozengine FourtimesTest.ozf``
+
 - [fourtimes callback](programs/fourtimes_callback/README.md)
+
+  compile ``ozc -c programs/fourtimes_callback/FourtimesCallbackTest.oz``
+
+  execute ``ozengine FourtimesCallbackTest.ozf``
+
 - [id](programs/id/README.md)
+  
+  compile  ``ozc -c programs/id/IdTest.oz``
+
+  execute `` ozengine IdTest.ozf``
+
 - [sqr](programs/sqr/README.md)
+
+  compile ``ozc -c programs/sqr/SqrTest.oz``
+
+  execute ``ozengine IdTest.ozf ``
+
 - [square callback](programs/square_callback/README.md)
+
+  compile ``ozc -c programs/square_callback/SquareCallbackTest.oz``
+
+  execute ``ozengine SquareCallbackTest.ozf``
+
 - [sum n](programs/sum_n/README.md)
+
+  compile ``ozc -c programs/sum_n/SumNTest.oz``
+
+  execute ``ozengine SumNTest.ozf ``
+
 - [sum n callback](programs/sum_n_callback/README.md)
+
+  compile ``ozc -c programs/sum_n_callback/SumNCallbackTest.oz``
+
+  execute ``ozengine SumNCallbackTest.ozf ``
+
 - [sum sub](programs/sum_sub/README.md)
+
+  compile ``ozc -c programs/sum_sub/SumSubTest.oz``
+
+  execute ``ozengine SumSubTest.ozf ``
+
 - [twice](programs/twice/README.md)
+
+  compile ``ozc -c programs/twice/TwiceTest.oz``
+
+  execute ``ozengine TwiceTest.ozf ``
+
 - [twice callback](programs/twice_callback/README.md)
+
+  compile ``ozc -c programs/twice_callback/TwiceCallbackTest.oz``
+
+  execute ``ozengine TwiceCallbackTest.ozf``
+
 - [var use](programs/var_use/README.md)
+
+  compile ``ozc -c programs/var_use/VarUseTest.oz``
+
+  execute ``ozengine VarUseTest.ozf``

@@ -28,7 +28,7 @@ define
    
    proc {Test1}
       local Path ProgramLines RootScope Functions in
-         Path = "programs/fourtimes/fourtimes.sl"
+         Path = "programs/fourtimes_callback/fourtimes_callback.sl"
          ProgramLines = {ReadProgram Path}
          {PrintProgram ProgramLines}
          RootScope = {New Scope init(ProgramLines)}
