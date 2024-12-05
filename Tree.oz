@@ -89,16 +89,16 @@ define
 
             if (LeftNode == nil) == false then
                 if Level == 1 then
-                    {BuildTree2 LeftNode (Level + 1) Prefix "├─"}  
+                    {BuildTree2 LeftNode (Level + 1) Prefix "|-"}  
                 else
-                    {BuildTree2 LeftNode (Level + 1) (Prefix # " " # {MultiString " " " " (ValueLenght)}) "├─"}  
+                    {BuildTree2 LeftNode (Level + 1) (Prefix # " " # {MultiString " " " " (ValueLenght)}) "|-"}  
                 end                
             end
             if (RightNode == nil) == false then
                 if Level == 1 then
-                    {BuildTree2 RightNode (Level + 1) Prefix "└─"}
+                    {BuildTree2 RightNode (Level + 1) Prefix "|_"}
                 else
-                    {BuildTree2 RightNode (Level + 1) (Prefix # " " # {MultiString " " " " (ValueLenght)}) "└─"}  
+                    {BuildTree2 RightNode (Level + 1) (Prefix # " " # {MultiString " " " " (ValueLenght)}) "|_"}  
                 end
             end
         end
