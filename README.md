@@ -174,6 +174,8 @@ Every program file is denoted with `.sl` to indicate the use of single programmi
 
 ## How to execute a program?
 
+Please before to run any program please compile each *.oz file, you can do that using the files compile.bat or compile.sh
+
 Programs can be executed through different ways.
 
 Main.oz file includes the chance of testing.
