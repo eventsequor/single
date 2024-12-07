@@ -28,8 +28,8 @@ define
    
    proc {Test1}
       local Path ProgramLines RootScope Functions in
-         Path = "programs/program.sl"
-         ProgramLines = ["fun id x = x" "fun f p = (id p) * p" "f 4"]
+         Path = "programs/sum_n_callback/sum_n_callback.sl"
+         ProgramLines = ["fun sum_n x y z n = (x + y + z) * n" "sum_n 1 (sum_n 1 1 1 2) 3 2"]
          {PrintProgram ProgramLines}
          RootScope = {New Scope init(ProgramLines)}
          {RootScope executeCallBacks()}
