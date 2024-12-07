@@ -2,7 +2,7 @@ functor
 import 
    System(showInfo:Show)
    Open
-   StringEder(split:Split replace:Replace strip:Strip)
+   StringEder(split:Split replace:Replace strip:Strip contains:Contains)
    Environment(scope:Scope)
    Tree(printTree:PrintTree)
    
@@ -13,7 +13,11 @@ define
       local F Ls Lines in
          F = {New Open.file init(name:Path flags:[read])}
          {F read(list:Ls)}
-         Lines = {Filter {Split Ls "\n"} fun {$ Line} {Length {Split {Replace Line " " ""} " "}} > 0 end}
+         if {Contains Ls "\r\n"} then
+            Lines = {Filter {Split Ls "\r\n"} fun {$ Line} {Length {Split {Replace Line " " ""} " "}} > 0 end}
+         else
+            Lines = {Filter {Split Ls "\n"} fun {$ Line} {Length {Split {Replace Line " " ""} " "}} > 0 end}
+         end
          {Filter {Map Lines fun {$ L} {Strip L " "} end} fun {$ Line} local H T in H|T = Line ("#" == [H]) == false end end} 
       end      
    end
